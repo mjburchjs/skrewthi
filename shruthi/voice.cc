@@ -27,8 +27,8 @@
 #include "shruthi/oscillator.h"
 #include "shruthi/parameter.h"
 #include "shruthi/storage.h"
-#include "shruthi/sub_oscillator.h"
-#include "shruthi/transient_generator.h"
+//#include "shruthi/sub_oscillator.h"
+//#include "shruthi/transient_generator.h"
 #include "avrlib/random.h"
 #include "avrlib/op.h"
 
@@ -37,9 +37,9 @@ using namespace avrlib;
 namespace shruthi {
 
 Oscillator osc_1;
-Oscillator osc_2;
-SubOscillator sub_osc;
-TransientGenerator transient_generator;
+//Oscillator osc_2;
+//SubOscillator sub_osc;
+//TransientGenerator transient_generator;
 
 /* <static> */
 Envelope Voice::envelope_[kNumEnvelopes];
@@ -54,6 +54,10 @@ int8_t Voice::modulation_destinations_[kNumModulationDestinations];
 int16_t Voice::dst_[kNumModulationDestinations];
 uint8_t Voice::buffer_[kAudioBlockSize];
 uint8_t Voice::osc2_buffer_[kAudioBlockSize];
+// ###### ADDED ######
+uint8_t Voice::osc3_buffer_[kAudioBlockSize];
+uint8_t Voice::sum_buffer_[kAudioBlockSize];
+
 uint8_t Voice::sync_state_[kAudioBlockSize];
 uint8_t Voice::no_sync_[kAudioBlockSize];
 uint8_t Voice::dummy_sync_state_[kAudioBlockSize];
@@ -69,11 +73,6 @@ void Voice::Init() {
   }
   memset(no_sync_, 0, kAudioBlockSize);
   
-  // Fill the "user" wavetable with data from an existing wavetable.
-  ResourcesManager::Load(
-      wav_res_waves,
-      user_wavetable,
-      kUserWavetableSize);
   NoteOff();
   
   ResetAllControllers();
@@ -132,11 +131,11 @@ void Voice::NoteOn(
     // doing monophonic things anyway (and some pseudo-polysynths/organs are
     // doing the same things).
     part.TriggerLfos();
-    transient_generator.Trigger();
+    //transient_generator.Trigger();
     modulation_sources_[MOD_SRC_VELOCITY] = velocity << 1;
     modulation_sources_[MOD_SRC_RANDOM] = Random::state_msb();
     osc_1.Reset();
-    osc_2.Reset();
+    //osc_2.Reset();
   }
   
   if (portamento) {
@@ -221,18 +220,36 @@ inline void Voice::LoadSources() {
       part.patch_.filter_cutoff, 128);
 
   dst_[MOD_DST_PWM_1] = U8U8Mul(part.patch_.osc[0].parameter, 128);
-  dst_[MOD_DST_PWM_2] = U8U8Mul(part.patch_.osc[1].parameter, 128);
+  //dst_[MOD_DST_PWM_2] = U8U8Mul(part.patch_.osc[1].parameter, 128);
 
-  dst_[MOD_DST_VCO_1_2_COARSE] = dst_[MOD_DST_VCO_1_2_FINE] = 8192;
-  dst_[MOD_DST_VCO_1] = dst_[MOD_DST_VCO_2] = 8192;
+  /*dst_[MOD_DST_VCO_1_2_COARSE] = */dst_[MOD_DST_VCO_1_2_FINE] = 8192;
+  dst_[MOD_DST_VCO_1] = 8192; //dst_[MOD_DST_VCO_2] = 8192;
   dst_[MOD_DST_LFO_1] = dst_[MOD_DST_LFO_2] = 8192;
   dst_[MOD_DST_TRIGGER_ENV_1] = 0;
   dst_[MOD_DST_TRIGGER_ENV_2] = 0;
 
   dst_[MOD_DST_FILTER_RESONANCE] = part.patch_.filter_resonance << 8;
-  dst_[MOD_DST_MIX_BALANCE] = part.patch_.mix_balance << 8;
-  dst_[MOD_DST_MIX_NOISE] = part.patch_.mix_noise << 8;
-  dst_[MOD_DST_MIX_SUB_OSC] = part.patch_.mix_sub_osc << 8;
+
+  // ### ADDED ###
+  // #############
+  dst_[MOD_DST_ROOT_VOL] = part.patch_.root_lvl << 8;
+  dst_[MOD_DST_DIV1_VOL] = part.patch_.div1_lvl << 8;
+  dst_[MOD_DST_DIV2_VOL] = part.patch_.div2_lvl << 8;
+  dst_[MOD_DST_MIX_FUZZ] = part.patch_.fuzz_lvl << 8;
+  // Subtract minimum shift as modulators do not go negative  ###
+  if(part.patch_.shift_amt < 0)
+  {
+	dst_[MOD_DST_SHIFT_AMT] = (part.patch_.shift_amt - SHIFT_MIN_VAL) << 8;
+  }
+  else
+  {
+	dst_[MOD_DST_SHIFT_AMT] = (part.patch_.shift_amt) << 8;
+  }
+  dst_[MOD_DST_SHIFT_FINE] = part.patch_.shift_fine << 7;
+  dst_[MOD_DST_WARP] = part.patch_.warp_amt << 7;
+  dst_[MOD_DST_DIVISIONS] = part.patch_.osc[0].option << 7;
+  dst_[MOD_DST_OD_TYPE] = 0;
+  // #############
 
   dst_[MOD_DST_ATTACK] = 8192;
   int16_t* envelope_parameters = &dst_[MOD_DST_ATTACK_1];
@@ -340,13 +357,13 @@ inline void Voice::UpdateDestinations() {
   // transistors are thermically coupled. You can disable tracking by applying
   // a negative modulation from NOTE to CUTOFF.
   uint16_t cutoff = dst_[MOD_DST_FILTER_CUTOFF];
-  if (part.patch_.osc[0].option != OP_DUO) {
+  //if (part.patch_.osc[0].option != OP_DUO) {
     if (part.system_settings().expansion_filter_board == FILTER_BOARD_PVK) {
       cutoff = S16ClipU14(cutoff + pitch_value_ - 8192 + (16 << 7));
     } else {
       cutoff = S16ClipU14(cutoff + pitch_value_ - 8192);
     }
-  }
+  //}
   cutoff = S16ClipU14(cutoff + S8U8Mul(part.patch_.filter_env,
       modulation_sources_[MOD_SRC_ENV_1]));
   cutoff = S16ClipU14(cutoff + S8S8Mul(part.patch_.filter_lfo,
@@ -389,9 +406,24 @@ inline void Voice::UpdateDestinations() {
   
   osc_1.set_parameter(U15ShiftRight7(dst_[MOD_DST_PWM_1]));
   osc_1.set_secondary_parameter(part.patch_.osc[0].range + 24);
-  osc_2.set_parameter(U15ShiftRight7(dst_[MOD_DST_PWM_2]));
-  osc_2.set_secondary_parameter(part.patch_.osc[1].range + 24);
-  
+
+  // ### ADDED ###
+  // #############
+  osc_1.set_shift_type(part.patch_.shift_type);
+  // ### Add minimum back to shift to adjust for modulators not going negative  ###
+  if(part.patch_.shift_amt < 0)
+  {
+	  osc_1.set_shift_amount((dst_[MOD_DST_SHIFT_AMT] >> 8) + SHIFT_MIN_VAL);
+  }
+  else
+  {
+	  osc_1.set_shift_amount(dst_[MOD_DST_SHIFT_AMT] >> 8);
+  }
+  osc_1.set_shift_fine(U15ShiftRight7(dst_[MOD_DST_SHIFT_FINE]));
+  osc_1.set_divisions(U15ShiftRight7(dst_[MOD_DST_DIVISIONS]) % sizeof(oDivisions));
+  osc_1.set_warp(U15ShiftRight7(dst_[MOD_DST_WARP]));
+  //#############
+
   int8_t attack_mod = (U15ShiftRight7(dst_[MOD_DST_ATTACK]) - 64) << 1;
   int16_t* envelope_parameters = &dst_[MOD_DST_ATTACK_1];
   for (int i = 0; i < kNumEnvelopes; ++i) {
@@ -406,114 +438,100 @@ inline void Voice::UpdateDestinations() {
 
 /* static */
 inline void Voice::RenderOscillators() {
-  // Apply portamento.
-  int16_t base_pitch = pitch_value_ + pitch_increment_;
-  if ((pitch_increment_ > 0) ^ (base_pitch < pitch_target_)) {
-    base_pitch = pitch_target_;
-    pitch_increment_ = 0;
-  }
-  pitch_value_ = base_pitch;
+	// Apply portamento.
+	int16_t base_pitch = pitch_value_ + pitch_increment_;
+	if ((pitch_increment_ > 0) ^ (base_pitch < pitch_target_)) {
+		base_pitch = pitch_target_;
+		pitch_increment_ = 0;
+	}
+	pitch_value_ = base_pitch;
 
-  // -4 / +4 semitones by the vibrato and pitch bend.
-  base_pitch += (dst_[MOD_DST_VCO_1_2_COARSE] - 8192) >> 4;
-  // -1 / +1 semitones by the vibrato and pitch bend.
-  base_pitch += (dst_[MOD_DST_VCO_1_2_FINE] - 8192) >> 7;
-  // -1 / +1 semitones by master tuning.
-  base_pitch += part.system_settings_.master_tuning;
+	// -4 / +4 semitones by the vibrato and pitch bend.
+	//base_pitch += (dst_[MOD_DST_VCO_1_2_COARSE] - 8192) >> 4;
+	// -1 / +1 semitones by the vibrato and pitch bend.
+	base_pitch += (dst_[MOD_DST_VCO_1_2_FINE] - 8192) >> 7;
+	// -1 / +1 semitones by master tuning.
+	base_pitch += part.system_settings_.master_tuning;
   
-  // Update the oscillator parameters.
-  for (uint8_t i = 0; i < kNumOscillators; ++i) {
-    int16_t pitch = base_pitch;
-    
-    // This is where we look up the list of most recently pressed notes for
-    // the duophonic mode.
-    if (part.patch_.osc[0].option == OP_DUO && i == 0 && pitch_bass_note_) {
-      pitch -= pitch_value_;
-      pitch += pitch_bass_note_;
-    }
-    
-    // -24 / +24 semitones by the range controller.
-    int8_t range = 0;
-    if (part.patch_.osc[i].shape != WAVEFORM_FM) {
-      range += part.patch_.osc[i].range;
-    }
-    range += part.system_settings_.octave * 12;
-    // -24 / +24 semitones by the main octave controller.
-    pitch += S8U8Mul(range, 128);
-    if (i == 1) {
-      // 0 / +1 semitones by the detune option for oscillator 2.
-      pitch += part.patch_.osc[1].option;
-    }
-    // -16 / +16 semitones by the routed modulations.
-    pitch += (dst_[MOD_DST_VCO_1 + i] - 8192) >> 2;
+	// Update the oscillator parameters.
+	int16_t pitch = base_pitch;
 
-    while (pitch >= kHighestNote) {
-      pitch -= kOctave;
-    }
-    // Extract the pitch increment from the pitch table.
-    int16_t ref_pitch = pitch - kPitchTableStart;
-    uint8_t num_shifts = 0;
-    while (ref_pitch < 0) {
-      ref_pitch += kOctave;
-      ++num_shifts;
-    }
-    uint24_t increment;
-    uint16_t pitch_lookup_index_integral = U16ShiftRight4(ref_pitch);
-    uint8_t pitch_lookup_index_fractional = U8ShiftLeft4(ref_pitch);
-    uint16_t increment16 = ResourcesManager::Lookup<uint16_t, uint16_t>(
-        lut_res_oscillator_increments, pitch_lookup_index_integral);
-    uint16_t increment16_next = ResourcesManager::Lookup<uint16_t, uint16_t>(
-        lut_res_oscillator_increments, pitch_lookup_index_integral + 1);
-    increment.integral = increment16 + U16U8MulShift8(
-        increment16_next - increment16, pitch_lookup_index_fractional);
-    increment.fractional = 0;
-    // Divide the pitch increment by the number of octaves we had to transpose
-    // to get a value in the lookup table.
-    while (num_shifts--) {
-      increment = U24ShiftRight(increment);
-    }
+	// ###### OSC 1 ######
+	// ###################
+	// -24 / +24 semitones by the range controller.
+	int8_t range = 0;
+	//if (part.patch_.osc[0].shape != WAVEFORM_FM) {
+		range += part.patch_.osc[0].range;
+	//}
+	range += part.system_settings_.octave * 12;
+	// -24 / +24 semitones by the main octave controller.
+	pitch += S8U8Mul(range, 128);
+	while (pitch >= kHighestNote) {
+		pitch -= kOctave;
+	}
+	// -16 / +16 semitones by the routed modulations.
+	pitch += (dst_[MOD_DST_VCO_1] - 8192) >> 2;
 
-    // Now the oscillators can recompute all their internal variables!
-    int8_t midi_note = U15ShiftRight7(pitch);
-    if (midi_note < 12) {
-      midi_note = 12;
-    }
-    // phase_increment.fractional = 0;
-    if (i == 0) {
-      sub_osc.set_increment(U24ShiftRight(increment));
-      osc_1.Render(
-          part.patch_.osc[0].shape,
-          midi_note,
-          increment,
-          no_sync_,
-          sync_state_,
-          buffer_);
-    } else {
-      uint8_t shape = part.patch_.osc[1].shape;
-      // The sub always plays the lowest note.
-      if (part.patch_.osc[0].option == OP_DUO) {
-        if (!pitch_bass_note_) {
-          shape = 0;
-        }
-      }
-      osc_2.Render(
-          shape,
-          midi_note,
-          increment,
-          part.patch_.osc[0].option == OP_SYNC ? sync_state_ : no_sync_,
-          dummy_sync_state_,
-          osc2_buffer_);
-    }
-  }
+	// NO Check for TOO HIGH PITCH
+	// Extract the pitch increment from the pitch table.
+	int16_t ref_pitch = pitch - kPitchTableStart;
+	uint8_t num_shifts = 0;
+	while (ref_pitch < 0) {
+		ref_pitch += kOctave;
+		++num_shifts;
+	}
+	uint24_t increment;
+	uint16_t pitch_lookup_index_integral = U16ShiftRight4(ref_pitch);
+	uint8_t pitch_lookup_index_fractional = U8ShiftLeft4(ref_pitch);
+	uint16_t increment16 = ResourcesManager::Lookup<uint16_t, uint16_t>(
+		lut_res_oscillator_increments, pitch_lookup_index_integral);
+	uint16_t increment16_next = ResourcesManager::Lookup<uint16_t, uint16_t>(
+		lut_res_oscillator_increments, pitch_lookup_index_integral + 1);
+	increment.integral = increment16 + U16U8MulShift8(
+		increment16_next - increment16, pitch_lookup_index_fractional);
+	increment.fractional = 0;
+	// Divide the pitch increment by the number of octaves we had to transpose
+	// to get a value in the lookup table.
+	while (num_shifts--) {
+		increment = U24ShiftRight(increment);
+	}
+
+	// Now the oscillators can recompute all their internal variables!
+	int8_t midi_note = U15ShiftRight7(pitch);
+	if (midi_note < 12) {
+		midi_note = 12;
+	}
+	//sub_osc.set_increment(U24ShiftRight(increment));
+	// sync or not sync??
+	if (part.patch_.shift_type > P_SHIFT)
+	{
+		osc_1.RenderHMC(
+			part.patch_.osc[0].shape,
+			midi_note,
+			increment,
+			sync_state_,	// SYNC
+			sync_state_,
+			buffer_, 
+			osc2_buffer_, 
+			osc3_buffer_, 
+			sum_buffer_
+		);
+	}
+	else
+	{
+		osc_1.RenderHMC(
+			part.patch_.osc[0].shape,
+			midi_note,
+			increment,
+			no_sync_,		// NO SYNC
+			sync_state_,
+			buffer_, 
+			osc2_buffer_, 
+			osc3_buffer_, 
+			sum_buffer_
+		);
+	}
 }
-
-const prog_uint8_t eight_step_sequence[8] PROGMEM = {
-  4, 1, 8, 8, 2, 4, 8, 2,
-};
-
-const prog_uint8_t four_step_sequence[4] PROGMEM = {
-  4, 1, 8, 2
-};
 
 /* static */
 void Voice::ProcessBlock() {
@@ -531,142 +549,167 @@ void Voice::ProcessBlock() {
     return;
   }
   
-  uint8_t op = part.patch_.osc[0].option;
-  // By default, disable rhythmical mixing.
-  uint8_t enabled_source_bitmask = 0xff;
-  
-  // With the sequenced mixing mode, use a different value of the bitmask.
-  if (op == OP_PING_PONG_2) {
-    enabled_source_bitmask = (trigger_count_ & 1) ? 0x0e : 0x0d;
-  } else if (op == OP_PING_PONG_4) {
-    enabled_source_bitmask = pgm_read_byte(
-        four_step_sequence + (trigger_count_ & 3));
-  } else if (op == OP_PING_PONG_8) {
-    enabled_source_bitmask = pgm_read_byte(
-        eight_step_sequence + (trigger_count_ & 7));
-  } else if (op == OP_PING_PONG_SEQ) {
-    enabled_source_bitmask = modulation_sources_[MOD_SRC_SEQ] >> 4;
-  }
-  
-  uint8_t osc_2_gain = U14ShiftRight6(dst_[MOD_DST_MIX_BALANCE]);
-  uint8_t osc_1_gain = ~osc_2_gain;
-  if (enabled_source_bitmask != 0xff && (enabled_source_bitmask & 3) != 3) {
-    osc_2_gain = (enabled_source_bitmask & 1) ? 255 : 0;
-    osc_1_gain = (enabled_source_bitmask & 2) ? 255 : 0;
-  }
-  if (!osc_1_gain && !osc_2_gain) {
-    memset(buffer_, 128, kAudioBlockSize);
-  } else {
-    // Mix oscillators.
-    switch (op) {
-      case OP_RING_MOD:
+	// distortion type
+	uint8_t op = 2;//S16ShiftRight8(dst_[MOD_DST_OD_TYPE]); //part.patch_.osc[0].option;
+   
+	// ### U15ShiftRight7(...);  Gives Nice Clipping
+	// ### S16ShiftRight8(...);  Has No Clipping
+	uint8_t root_gain = S16ShiftRight8(dst_[MOD_DST_ROOT_VOL]);
+	uint8_t div1_gain = S16ShiftRight8(dst_[MOD_DST_DIV1_VOL]);
+	uint8_t div2_gain = S16ShiftRight8(dst_[MOD_DST_DIV2_VOL]);
+	uint8_t fuzz_gain = S16ShiftRight8(dst_[MOD_DST_MIX_FUZZ]);
+	
+	if (!root_gain && !div1_gain && !div2_gain) {
+		memset(sum_buffer_, 128, kAudioBlockSize);
+	} else {
+		// approximation to shift low vol sound to center values -- (max gain - actual gain) / 2
+		uint8_t center_adjust = (255  - (root_gain + div1_gain + div2_gain)) >> 1;
+		// MIX
         for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-          uint8_t ring_mod = S8S8MulShift8(
-              buffer_[i] + 128,
-              osc2_buffer_[i] + 128) + 128;
-          buffer_[i] = U8Mix(buffer_[i], ring_mod, osc_1_gain, osc_2_gain);
+			int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
+
+			sum_buffer_[i] = (byte_gain_ >> 8) + center_adjust; 
+
+			// FUZZ MIX
+			if(fuzz_gain)
+			{
+				switch (op) {
+					//case OP_RING_MOD:
+					//	for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					//		uint8_t ring_mod = S8S8MulShift8(
+					//							buffer_[i] + 128,
+					//							osc2_buffer_[i] + 128) + 128;
+					//		buffer_[i] = U8Mix(buffer_[i], ring_mod, osc_1_gain, osc_2_gain);
+					//	}
+					//	break;
+					//case OP_FUZZ:
+					//	for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					//		buffer_[i] >>= 1;
+					//		buffer_[i] += (osc2_buffer_[i] >> 1);
+					//		buffer_[i] = U8Mix(
+					//							buffer_[i],
+					//							ResourcesManager::Lookup<uint8_t, uint8_t>(
+					//							wav_res_distortion, buffer_[i]),
+					//							osc_1_gain,
+					//							osc_2_gain);
+					//	}
+					//	break;
+					//case 1: //OP_XOR:
+					//	// Auto use full gain for Root
+					//	// XOR against div1 / div2 mix
+					//	buffer_[i] ^= U8Mix(osc2_buffer_[i], osc3_buffer_[i], div1_gain, div2_gain);
+					//	sum_buffer_[i] = buffer_[i] ^ fuzz_gain;
+					//	break;
+					//case 2: //OP_FOLD:
+					//	sum_buffer_[i] = U8Mix(sum_buffer_[i], sum_buffer_[i] + 128, ~fuzz_gain, fuzz_gain);
+					//	break;
+
+					//case 2:	// boost clip
+					//	if(sum_buffer_[i] & 128)
+					//	{
+					//		sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
+					//	}
+					//	else // negative boost
+					//	{
+					//		sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
+					//	}
+					//	break;
+					//case 1:	// bit reduce
+					//	if(sum_buffer_[i] & 128)
+					//	{
+					//		sum_buffer_[i] = (sum_buffer_[i] & ~fuzz_gain) + fuzz_gain;
+					//	}
+					//	else // negative boost
+					//	{
+					//		sum_buffer_[i] &= ~fuzz_gain;
+					//	}
+					//	break;
+					case 2:
+						if(!(~sum_buffer_[i] & 192)) // boost top quarter
+						{
+							sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
+						}
+						else if(!(sum_buffer_[i] & 192)) // lower bottom quarter
+						{
+							sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
+						}
+						//else if(sum_buffer_[i] & 128) // subtract top half
+						//{
+						//	//sum_buffer_[i] -= fuzz_gain;
+						//	sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 127);
+						//}
+						//else // add bottom half
+						//{
+						//	//sum_buffer_[i] += fuzz_gain;
+						//	sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 127);
+						//}
+						break;
+
+					//case OP_BITS:
+					//	{
+					//		osc_2_gain >>= 5;
+					//		osc_2_gain = 255 - ((1 << osc_2_gain) - 1);
+					//		for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					//			buffer_[i] >>= 1;
+					//			buffer_[i] += (osc2_buffer_[i] >> 1);
+					//			buffer_[i] &= osc_2_gain;
+					//		}
+					//	}
+					//	break;
+					default:
+						// positive boost
+						if(sum_buffer_[i] & 128)
+						{
+							sum_buffer_[i] += U8U8MulShift8( ~sum_buffer_[i], fuzz_gain << 1 );
+						}
+						else // negative boost
+						{
+							sum_buffer_[i] = U8U8MulShift8( sum_buffer_[i], ~fuzz_gain << 1 );
+						}
+						break;
+				}    
+			}
         }
-        break;
-      case OP_FUZZ:
-        for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-          buffer_[i] >>= 1;
-          buffer_[i] += (osc2_buffer_[i] >> 1);
-          buffer_[i] = U8Mix(
-              buffer_[i],
-              ResourcesManager::Lookup<uint8_t, uint8_t>(
-                  wav_res_distortion, buffer_[i]),
-              osc_1_gain,
-              osc_2_gain);
-        }
-        break;
-      case OP_XOR:
-        for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-          buffer_[i] ^= osc2_buffer_[i];
-          buffer_[i] ^= osc_2_gain;
-        }
-        break;
-      case OP_FOLD:
-        for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-          buffer_[i] >>= 1;
-          buffer_[i] += (osc2_buffer_[i] >> 1);
-          buffer_[i] = U8Mix(
-              buffer_[i],
-              buffer_[i] + 128,
-              osc_1_gain,
-              osc_2_gain);
-        }
-        break;
-      case OP_BITS:
-        {
-          osc_2_gain >>= 5;
-          osc_2_gain = 255 - ((1 << osc_2_gain) - 1);
-          for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-            buffer_[i] >>= 1;
-            buffer_[i] += (osc2_buffer_[i] >> 1);
-            buffer_[i] &= osc_2_gain;
-          }
-        }
-        break;
-      default:
-        for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-          buffer_[i] = U8Mix(
-              buffer_[i],
-              osc2_buffer_[i],
-              osc_1_gain,
-              osc_2_gain);
-        }
-        break;
-    }    
-  }
-  uint8_t decimate = 1;
-  if (op == OP_CRUSH_4) {
-    decimate = 4;
-  } else if (op == OP_CRUSH_8) {
-    decimate = 8;
-  }
+	}
+  //  // Mix oscillators.
+  //uint8_t decimate = 1;
+  //if (op == OP_CRUSH_4) {
+  //  decimate = 4;
+  //} else if (op == OP_CRUSH_8) {
+  //  decimate = 8;
+  //}
   
-  // Mix-in sub oscillator or transient generator.
-  uint8_t sub_gain = U15ShiftRight7(dst_[MOD_DST_MIX_SUB_OSC]);
-  if (enabled_source_bitmask != 0xff) {
-    sub_gain = (enabled_source_bitmask & 4) ? sub_gain : 0;
-    if ((enabled_source_bitmask & 3) == 0) {
-      sub_gain <<= 1;
-    }
-  }
-  if (part.patch_.mix_sub_osc_shape < WAVEFORM_SUB_OSC_CLICK) {
-    sub_osc.Render(part.patch_.mix_sub_osc_shape, buffer_, sub_gain);
-  } else {
-    if (sub_gain < 128) {
-      sub_gain <<= 1;
-    }
-    transient_generator.Render(
-        part.patch_.mix_sub_osc_shape, buffer_, sub_gain);
-  }
+  //// Mix-in sub oscillator or transient generator.
+  //uint8_t sub_gain = U15ShiftRight7(dst_[MOD_DST_MIX_SUB_OSC]);
+  //if (enabled_source_bitmask != 0xff) {
+  //  sub_gain = (enabled_source_bitmask & 4) ? sub_gain : 0;
+  //  if ((enabled_source_bitmask & 3) == 0) {
+  //    sub_gain <<= 1;
+  //  }
+  //}
+  //if (part.patch_.mix_sub_osc_shape < WAVEFORM_SUB_OSC_CLICK) {
+  //  sub_osc.Render(part.patch_.mix_sub_osc_shape, buffer_, sub_gain);
+  //} else {
+  //  if (sub_gain < 128) {
+  //    sub_gain <<= 1;
+  //  }
+  //  transient_generator.Render(
+  //      part.patch_.mix_sub_osc_shape, buffer_, sub_gain);
+  //}
   
-  // Apply optional bitcrushing.
-  if (decimate > 1) {
-    uint8_t* buffer = buffer_;
-    for (uint8_t i = 0; i < kAudioBlockSize; i += decimate) {
-      uint8_t value = *buffer++;
-      for (uint8_t j = 1; j < decimate; ++j) {
-        *buffer++ = value;
-      }
-    }
-  }
+  //// Apply optional bitcrushing.
+  //if (decimate > 1) {
+  //  uint8_t* buffer = buffer_;
+  //  for (uint8_t i = 0; i < kAudioBlockSize; i += decimate) {
+  //    uint8_t value = *buffer++;
+  //    for (uint8_t j = 1; j < decimate; ++j) {
+  //      *buffer++ = value;
+  //    }
+  //  }
+  //}
   
-  // Mix with noise and output.
-  uint8_t noise = Random::GetByte();
-  uint8_t noise_gain = S16ShiftRight8(dst_[MOD_DST_MIX_NOISE]);
-  if (enabled_source_bitmask != 0xff) {
-    noise_gain = (enabled_source_bitmask & 8) ? noise_gain : 0;
-    if (enabled_source_bitmask == 8) {
-      noise_gain <<= 1;
-    }
-  }
-  uint8_t mix_gain = ~noise_gain;
   for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-    noise = (noise * 73) + 1;
-    audio_out.Overwrite(U8Mix(buffer_[i], noise, mix_gain, noise_gain));
+	  audio_out.Overwrite(sum_buffer_[i]);
   }
 }
 

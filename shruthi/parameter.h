@@ -59,6 +59,8 @@ enum Unit {
   UNIT_FILTER_4P_MODE,
   UNIT_FILTER_4P_FLAVOUR,
   UNIT_FILTER_SP_MODE,
+  UNIT_DIVISIONS,
+  UNIT_SHIFT_TYPE,
   UNIT_LAST
 };
 
@@ -68,8 +70,8 @@ struct Parameter {
   uint8_t min_value;
   uint8_t max_value;
   uint8_t midi_cc[2];
-  uint8_t short_name;
-  uint8_t long_name;
+  uint16_t short_name;
+  uint16_t long_name;
   
   uint8_t Scale(uint8_t value_7bits) const;
   uint8_t Clamp(uint8_t value) const;

@@ -141,30 +141,31 @@ void Part::Init() {
 static const prog_char init_patch[] PROGMEM = {
     // Oscillators
     WAVEFORM_SAW, 0, 0, 0,
-    WAVEFORM_SAW, 16, -12, 12,
-    // Mixer
-    32, 0, 0, WAVEFORM_SUB_OSC_SQUARE_1,
+	// Levels
+    63, 0, 0, 0,
+    // Effects
+    0, 0, 0, 0,
     // Filter
-    96, 0, 32, 0,
+    127, 0, 63, 0,
     // ADSR
     0, 50, 20, 60,
     0, 40, 90, 30,
     // LFO
-    LFO_WAVEFORM_TRIANGLE, 80, 0, 0,
+    LFO_WAVEFORM_TRIANGLE, 3, 0, 0,
     LFO_WAVEFORM_TRIANGLE, 3, 0, 0,
     // Routing
-    MOD_SRC_LFO_1, MOD_DST_VCO_1, 0,
-    MOD_SRC_ENV_1, MOD_DST_VCO_2, 0,
-    MOD_SRC_ENV_1, MOD_DST_PWM_1, 0,
-    MOD_SRC_LFO_1, MOD_DST_PWM_2, 0,
-    MOD_SRC_LFO_2, MOD_DST_MIX_BALANCE, 0,
-    MOD_SRC_SEQ, MOD_DST_MIX_BALANCE, 0,
-    MOD_SRC_VELOCITY, MOD_DST_PWM_1, 0,
-    MOD_SRC_VELOCITY, MOD_DST_PWM_2, 0,
+    MOD_SRC_LFO_1, MOD_DST_PWM_1, 0,
+    MOD_SRC_ENV_1, MOD_DST_SHIFT_FINE, 0,
+    MOD_SRC_LFO_1, MOD_DST_ROOT_VOL, 0,
+    MOD_SRC_ENV_1, MOD_DST_MIX_FUZZ, 0,
+    MOD_SRC_LFO_2, MOD_DST_DIVISIONS, 0,
+    MOD_SRC_NOTE, MOD_DST_MIX_FUZZ, 0,
+    MOD_SRC_OFFSET, MOD_DST_PWM_1, 0,
+    MOD_SRC_AFTERTOUCH, MOD_DST_ROOT_VOL, 0,
     MOD_SRC_ENV_2, MOD_DST_VCA, 63,
     MOD_SRC_VELOCITY, MOD_DST_VCA, 16,
-    MOD_SRC_PITCH_BEND, MOD_DST_VCO_1_2_COARSE, 32,
-    MOD_SRC_LFO_1, MOD_DST_VCO_1_2_COARSE, 16,
+    MOD_SRC_PITCH_BEND, MOD_DST_VCO_1, 32,
+    MOD_SRC_LFO_1, MOD_DST_VCO_1_2_FINE, 16,
     // Name
     'i', 'n', 'i', 't', ' ', ' ', ' ', ' ',
     // Performance page assignments.
@@ -587,13 +588,13 @@ void Part::ClockArpeggiator() {
     generated_notes_.NoteOn(note, velocity);
     InternalNoteOn(note, velocity);
     
-    // Big hack to allow the arpeggiator to work polyphonically in DUO mode.
-    if (arp_previous_note_ &&
-        patch_.osc[0].option == OP_DUO
-        && arp_previous_note_ != note) {
-      generated_notes_.NoteOn(arp_previous_note_, velocity);
-      InternalNoteOn(arp_previous_note_, velocity);
-    }
+    //// Big hack to allow the arpeggiator to work polyphonically in DUO mode.
+    //if (arp_previous_note_ &&
+    //    patch_.osc[0].option == OP_DUO
+    //    && arp_previous_note_ != note) {
+    //  generated_notes_.NoteOn(arp_previous_note_, velocity);
+    //  InternalNoteOn(arp_previous_note_, velocity);
+    //}
 
     arp_previous_note_ = note;
     arp_note_ += arp_direction_;
@@ -813,7 +814,7 @@ void Part::ProcessBlock() {
     voice_.set_modulation_source(MOD_SRC_LFO_1 + i, lfo_[i].Render(
         sequencer_settings_));
   }
-  voice_.set_modulation_source(MOD_SRC_NOISE, Random::state_msb());
+  //voice_.set_modulation_source(MOD_SRC_NOISE, Random::state_msb());
 
   // Update the modulation speed if some of the LFO FM parameters have changed.
   for (uint8_t i = 0; i < kNumLfos; ++i) {
@@ -944,7 +945,7 @@ void Part::InternalNoteOff(uint8_t note) {
     const NoteEntry& after = mono_allocator_.most_recent_note();
     if (mono_allocator_.size() == 0) {
       voice_.NoteOff();
-    } else if (before.note != after.note && patch_.osc[0].option != OP_DUO) {
+    } else if (before.note != after.note && patch_.osc[0].option) {// != OP_DUO) {
       voice_.NoteOn(
           Tune(after.note),
           after.velocity,

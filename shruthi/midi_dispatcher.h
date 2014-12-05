@@ -250,6 +250,9 @@ class MidiDispatcher : public midi::MidiDevice {
   
   static inline void OnProgramChange(uint16_t n) {
     uint8_t channel = (part.system_settings().midi_channel - 1) & 0xf;
+	// ADDED -- sets current_bank_ on internal patch changes.  
+	//          Allows receiving patch change w/o bank change
+	current_bank_ = n >> 7;
     if (mode() >= MIDI_OUT_FULL) {
       Send3(0xb0 | channel, midi::kBankMsb, n >> 7);
       Send3(0xc0 | channel, n & 0x7f, 0xfe /* Dummy active sensing */);

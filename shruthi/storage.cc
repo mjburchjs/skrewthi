@@ -198,8 +198,8 @@ void Storage::SysExParseCommand() {
       break;
 
     case 0x03:  // Wavetable dump
-      sysex_rx_destination_ = user_wavetable;
-      sysex_rx_expected_size_ = kUserWavetableSize;
+      //sysex_rx_destination_ = user_wavetable;
+      //sysex_rx_expected_size_ = kUserWavetableSize;
       break;
 
     case 0x04:  // System settings transfer
