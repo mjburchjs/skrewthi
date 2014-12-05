@@ -550,8 +550,9 @@ void Voice::ProcessBlock() {
   }
   
 	// distortion type
-	uint8_t op = 2;//S16ShiftRight8(dst_[MOD_DST_OD_TYPE]); //part.patch_.osc[0].option;
+	uint8_t op = 5;//S16ShiftRight8(dst_[MOD_DST_OD_TYPE]) >> 1; //part.patch_.osc[0].option;
    
+	// MIX LEVELS
 	// ### U15ShiftRight7(...);  Gives Nice Clipping
 	// ### S16ShiftRight8(...);  Has No Clipping
 	uint8_t root_gain = S16ShiftRight8(dst_[MOD_DST_ROOT_VOL]);
@@ -564,15 +565,17 @@ void Voice::ProcessBlock() {
 	} else {
 		// approximation to shift low vol sound to center values -- (max gain - actual gain) / 2
 		uint8_t center_adjust = (255  - (root_gain + div1_gain + div2_gain)) >> 1;
-		// MIX
+		// MIX each byte
         for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+			// the mixed / multiplied oscillator and divisions
 			int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
-
+			// adjust byte_gain to buffer
 			sum_buffer_[i] = (byte_gain_ >> 8) + center_adjust; 
 
-			// FUZZ MIX
+			// Distortion Mix
 			if(fuzz_gain)
 			{
+				// determine distortion type
 				switch (op) {
 					//case OP_RING_MOD:
 					//	for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
@@ -580,18 +583,6 @@ void Voice::ProcessBlock() {
 					//							buffer_[i] + 128,
 					//							osc2_buffer_[i] + 128) + 128;
 					//		buffer_[i] = U8Mix(buffer_[i], ring_mod, osc_1_gain, osc_2_gain);
-					//	}
-					//	break;
-					//case OP_FUZZ:
-					//	for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-					//		buffer_[i] >>= 1;
-					//		buffer_[i] += (osc2_buffer_[i] >> 1);
-					//		buffer_[i] = U8Mix(
-					//							buffer_[i],
-					//							ResourcesManager::Lookup<uint8_t, uint8_t>(
-					//							wav_res_distortion, buffer_[i]),
-					//							osc_1_gain,
-					//							osc_2_gain);
 					//	}
 					//	break;
 					//case 1: //OP_XOR:
@@ -604,61 +595,68 @@ void Voice::ProcessBlock() {
 					//	sum_buffer_[i] = U8Mix(sum_buffer_[i], sum_buffer_[i] + 128, ~fuzz_gain, fuzz_gain);
 					//	break;
 
-					//case 2:	// boost clip
-					//	if(sum_buffer_[i] & 128)
-					//	{
-					//		sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
-					//	}
-					//	else // negative boost
-					//	{
-					//		sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
-					//	}
-					//	break;
-					//case 1:	// bit reduce
-					//	if(sum_buffer_[i] & 128)
-					//	{
-					//		sum_buffer_[i] = (sum_buffer_[i] & ~fuzz_gain) + fuzz_gain;
-					//	}
-					//	else // negative boost
-					//	{
-					//		sum_buffer_[i] &= ~fuzz_gain;
-					//	}
-					//	break;
-					case 2:
-						if(!(~sum_buffer_[i] & 192)) // boost top quarter
+					case 1:	// Bit Reduction - (Round to every x values)
+						if(sum_buffer_[i] & 128)	// positive boost
+						{
+							sum_buffer_[i] = (sum_buffer_[i] & ~fuzz_gain) + fuzz_gain;
+						}
+						else // negative boost
+						{
+							sum_buffer_[i] &= ~fuzz_gain;
+						}
+						break;
+
+					case 2:	// Quarter Shift UP/DOWN/UP/DOWN
+						if(!(~sum_buffer_[i] & 192)) // lower top quarter
+						{
+							sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						else if(!(sum_buffer_[i] & 192)) // raise bottom quarter
+						{
+							sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						else if(sum_buffer_[i] & 128) // raise top half
+						{
+							sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						else // lower bottom half
+						{
+							sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						break;
+
+					case 3:	// Boost Clip
+						if(sum_buffer_[i] & 128) // positive clip
 						{
 							sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
 						}
-						else if(!(sum_buffer_[i] & 192)) // lower bottom quarter
+						else // negative clip
 						{
 							sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
 						}
-						//else if(sum_buffer_[i] & 128) // subtract top half
-						//{
-						//	//sum_buffer_[i] -= fuzz_gain;
-						//	sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 127);
-						//}
-						//else // add bottom half
-						//{
-						//	//sum_buffer_[i] += fuzz_gain;
-						//	sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 127);
-						//}
 						break;
 
-					//case OP_BITS:
-					//	{
-					//		osc_2_gain >>= 5;
-					//		osc_2_gain = 255 - ((1 << osc_2_gain) - 1);
-					//		for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-					//			buffer_[i] >>= 1;
-					//			buffer_[i] += (osc2_buffer_[i] >> 1);
-					//			buffer_[i] &= osc_2_gain;
-					//		}
-					//	}
-					//	break;
-					default:
-						// positive boost
-						if(sum_buffer_[i] & 128)
+					case 4:	// Samplerate reduction
+						fuzz_gain &= 31;
+						// set next fuzz_gain number of bytes to current buffer value
+						for (uint8_t j = 1; j < fuzz_gain; ++j) {
+							// if next byte is over buffer size - break
+							if ((i + j) >= kAudioBlockSize)
+							{
+								i = kAudioBlockSize;
+								break;
+							}
+							sum_buffer_[i + j] = sum_buffer_[i];
+						}
+						i += fuzz_gain - 1;
+						break;
+
+					case 5:	// flip bit - shift bottom to top and top to bottom
+						sum_buffer_[i] ^= ((fuzz_gain + 1) << 1);
+						break;
+
+					default:	// OD - reduce distance between value and nearest limit
+						if(sum_buffer_[i] & 128)	// positive boost
 						{
 							sum_buffer_[i] += U8U8MulShift8( ~sum_buffer_[i], fuzz_gain << 1 );
 						}
@@ -671,42 +669,6 @@ void Voice::ProcessBlock() {
 			}
         }
 	}
-  //  // Mix oscillators.
-  //uint8_t decimate = 1;
-  //if (op == OP_CRUSH_4) {
-  //  decimate = 4;
-  //} else if (op == OP_CRUSH_8) {
-  //  decimate = 8;
-  //}
-  
-  //// Mix-in sub oscillator or transient generator.
-  //uint8_t sub_gain = U15ShiftRight7(dst_[MOD_DST_MIX_SUB_OSC]);
-  //if (enabled_source_bitmask != 0xff) {
-  //  sub_gain = (enabled_source_bitmask & 4) ? sub_gain : 0;
-  //  if ((enabled_source_bitmask & 3) == 0) {
-  //    sub_gain <<= 1;
-  //  }
-  //}
-  //if (part.patch_.mix_sub_osc_shape < WAVEFORM_SUB_OSC_CLICK) {
-  //  sub_osc.Render(part.patch_.mix_sub_osc_shape, buffer_, sub_gain);
-  //} else {
-  //  if (sub_gain < 128) {
-  //    sub_gain <<= 1;
-  //  }
-  //  transient_generator.Render(
-  //      part.patch_.mix_sub_osc_shape, buffer_, sub_gain);
-  //}
-  
-  //// Apply optional bitcrushing.
-  //if (decimate > 1) {
-  //  uint8_t* buffer = buffer_;
-  //  for (uint8_t i = 0; i < kAudioBlockSize; i += decimate) {
-  //    uint8_t value = *buffer++;
-  //    for (uint8_t j = 1; j < decimate; ++j) {
-  //      *buffer++ = value;
-  //    }
-  //  }
-  //}
   
   for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 	  audio_out.Overwrite(sum_buffer_[i]);
