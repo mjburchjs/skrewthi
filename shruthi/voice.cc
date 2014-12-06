@@ -550,7 +550,7 @@ void Voice::ProcessBlock() {
   }
   
 	// distortion type
-	uint8_t op = 0;	//S16ShiftRight8(dst_[MOD_DST_OD_TYPE]) << 1; //part.patch_.osc[0].option;
+	uint8_t op = S16ShiftRight8(dst_[MOD_DST_OD_TYPE]); //part.patch_.osc[0].option;
    
 	// MIX LEVELS
 	// ### U15ShiftRight7(...);  Gives Nice Nasty Distortion - goes over 65535 limit
@@ -602,101 +602,96 @@ void Voice::ProcessBlock() {
 				//	sum_buffer_[i] = buffer_[i] ^ fuzz_gain;
 				//	break;
 
-				case 1:	// Bit Reduction - (Floor to every x values) (4? 3) (100 011)
-					if(sum_buffer_[i] & 128)	// positive boost
+				case 1:	// Bit Reduction - (Floor to every x values) (2) 
 					{
-						sum_buffer_[i] = (sum_buffer_[i] & ~fuzz_gain) + fuzz_gain;
-					}
-					else // negative boost
-					{
-						sum_buffer_[i] &= ~fuzz_gain;
-					}
-					break;
-
-				case 2:	// Samplerate reduction (6? 5) (110 101)
-					fuzz_gain &= 31;
-					// set next 'fuzz_gain' number of bytes to current buffer value
-					for (uint8_t j = 1; j < fuzz_gain; ++j) {
-						// if next byte is over buffer size - break
-						if ((i + j) >= kAudioBlockSize)
+						if(sum_buffer_[i] & 128)	// positive boost
 						{
-							i = kAudioBlockSize;
-							break;
+							sum_buffer_[i] = (sum_buffer_[i] & ~fuzz_gain) + fuzz_gain;
 						}
-						sum_buffer_[i + j] = sum_buffer_[i];
+						else // negative boost
+						{
+							sum_buffer_[i] &= ~fuzz_gain;
+						}
+						break;
 					}
-					i += fuzz_gain - 1;
-					break;
+
+				case 2:	// Samplerate reduction (3)
+					{
+						fuzz_gain &= 31;
+						// set next 'fuzz_gain' number of bytes to current buffer value
+						for (uint8_t j = 1; j < fuzz_gain; ++j) {
+							// if next byte is over buffer size - break
+							if ((i + j) >= kAudioBlockSize)
+							{
+								i = kAudioBlockSize;
+								break;
+							}
+							sum_buffer_[i + j] = sum_buffer_[i];
+						}
+						i += fuzz_gain - 1;
+						break;
+					}
 				// ### TODO ### adjust for low volume values - sum_buffer_[i] << 1
 				// ############
-				case 3:	// Quarter Shift UP/DOWN/UP/DOWN
-					if(!(~sum_buffer_[i] & 192)) // lower top quarter
+				case 3:	// Quarter Shift UP/DOWN/UP/DOWN (4)
 					{
-						sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain << 1, 255);
+						if(!(~sum_buffer_[i] & 192)) // lower top quarter
+						{
+							sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						else if(!(sum_buffer_[i] & 192)) // raise bottom quarter
+						{
+							sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						else if(sum_buffer_[i] & 128) // raise top half
+						{
+							sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						else // lower bottom half
+						{
+							sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain << 1, 255);
+						}
+						break;
 					}
-					else if(!(sum_buffer_[i] & 192)) // raise bottom quarter
-					{
-						sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain << 1, 255);
-					}
-					else if(sum_buffer_[i] & 128) // raise top half
-					{
-						sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain << 1, 255);
-					}
-					else // lower bottom half
-					{
-						sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain << 1, 255);
-					}
-					break;
-				// ### exceeds limit and wraps around - find clip limit NOT 255
-				// ##################
-				case 4:	// Boost Clip - lots of HF (10 9)
-					if(sum_buffer_[i] & 128) // positive clip
-					{
-						sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
-					}
-					else // negative clip
-					{
-						sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
-					}
-					break;
 
-				case 5:	// flip bit - shift bottom to top and top to bottom (12 ? 11) (1100 1011)
-					sum_buffer_[i] ^= ((fuzz_gain + 1) << 1);	// 0, 4, 6 ... 128
-					break;
-				// ### TOO SLOW ### needs fewer instructions per cycle
-				// ################
-				case 6:	// fold 2 (14 13) (1110 1101)
+				case 4:	// flip bit - shift bottom to top and top to bottom (5)
+					{
+						sum_buffer_[i] ^= ((fuzz_gain + 1) << 1);	// 0, 4, 6 ... 128
+						break;
+					}
+
+				case 5:	// stretch and fold (6)
 					{
 						if(sum_buffer_[i] & 128)	// positive half
 						{
-							int16_t val = U8U8Mul((sum_buffer_[i] & 127), fuzz_gain + 16) >> 4;	//  buffer * fuzz_gain / 32
+							sum_buffer_[i] = U8U8Mul((sum_buffer_[i] & 127), fuzz_gain + 4) >> 2;	//  buffer * fuzz_gain / 32
 							// val over limit
-							if (val & 128)
+							if (sum_buffer_[i] & 128)
 							{
-								sum_buffer_[i] = (~val & 255) | 128;	// subtract value from high limit 255
+								sum_buffer_[i] = ~sum_buffer_[i] | 128;	// subtract value from high limit 255
 							}
 							else
 							{
-								sum_buffer_[i] = val | 128;
+								sum_buffer_[i] = sum_buffer_[i] | 128;
 							}
 						}
 						else	// negative half
 						{
-							int16_t val = U8U8Mul((~sum_buffer_[i] & 127), fuzz_gain + 16) >> 4;	//  buffer * fuzz_gain / 32
+							sum_buffer_[i] = U8U8Mul((~sum_buffer_[i] & 127), fuzz_gain + 4) >> 2;	//  buffer * fuzz_gain / 32
 							// val under limit
-							if(val & 128)
+							if(sum_buffer_[i] & 128)
 							{
-								sum_buffer_[i] = (val & 255) & 127;	// subtract value from high limit 255
+								sum_buffer_[i] = sum_buffer_[i] & 127;	// subtract value from high limit 255
 							}
 							else
 							{
-								sum_buffer_[i] = ~val & 127;
+								sum_buffer_[i] = ~sum_buffer_[i] & 127;
 							}
 						}
 						break;
 					}
 
-				case 7:	// fold 15 16 (10000 01111)
+				case 6:	// fold (7)
 					{
 						int16_t val = sum_buffer_[i] + (fuzz_gain << 2);	// value + 252
 						if(val & 256)
@@ -710,50 +705,67 @@ void Voice::ProcessBlock() {
 						break;
 					}
 
-				case 8:	// fold / stretch - top and bottom 18 17 (10010 10001)
-					{
-						if(sum_buffer_[i] & 128) // positive clip
-						{
-							int16_t val = sum_buffer_[i] + (fuzz_gain << 2);
-							if(val & 256)
-							{
-								sum_buffer_[i] = ~val & 255;	// subtract value from high limit 255
-							}
-							else
-							{
-								sum_buffer_[i] = val;
-							}
-						}
-						else // negative clip
-						{
-							int16_t val = sum_buffer_[i] - (fuzz_gain << 2);
-							if(val < 0)
-							{
-								sum_buffer_[i] = ~val & 255;	// subtract value from high limit 255
-							}
-							else
-							{
-								sum_buffer_[i] = val;
-							}
-						}
-						break;
-					}
+				//case 8:	// fold / stretch - top and bottom 18 17 (10010 10001)
+				//	{
+				//		if(sum_buffer_[i] & 128) // positive clip
+				//		{
+				//			int16_t val = sum_buffer_[i] + (fuzz_gain << 2);
+				//			if(val & 256)
+				//			{
+				//				sum_buffer_[i] = ~val & 255;	// subtract value from high limit 255
+				//			}
+				//			else
+				//			{
+				//				sum_buffer_[i] = val;
+				//			}
+				//		}
+				//		else // negative clip
+				//		{
+				//			int16_t val = sum_buffer_[i] - (fuzz_gain << 2);
+				//			if(val < 0)
+				//			{
+				//				sum_buffer_[i] = ~val & 255;	// subtract value from high limit 255
+				//			}
+				//			else
+				//			{
+				//				sum_buffer_[i] = val;
+				//			}
+				//		}
+				//		break;
+				//	}
 
-				//case 8:	// rotate - NO BOOST - like exceeding hardware limit
+				// ### exceeds limit and wraps around - find clip limit NOT 255
+				// ##################
+				//case 4:	// Boost Clip - lots of HF (10 9)
+				//	{
+				//		if(sum_buffer_[i] & 128) // positive clip
+				//		{
+				//			sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
+				//		}
+				//		else // negative clip
+				//		{
+				//			sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
+				//		}
+				//		break;
+				//	}
+
+				//case 8:	// rotate - NO BOOST - like exceeding hardware limit - REMOVE
 				//	sum_buffer_[i] = ((sum_buffer_[i] + fuzz_gain - center_adjust) % 255) + center_adjust;	// too high values appear low 
 				//	break;
 
 				default:	// OD - reduce distance between value and nearest limit 0 or 255
-					if(sum_buffer_[i] & 128)	// positive boost
 					{
-						sum_buffer_[i] += U8U8MulShift8( ~sum_buffer_[i], fuzz_gain << 1 );
+						if(sum_buffer_[i] & 128)	// positive boost
+						{
+							sum_buffer_[i] += U8U8MulShift8( ~sum_buffer_[i], fuzz_gain << 1 );
+						}
+						else // negative boost
+						{
+							sum_buffer_[i] = U8U8MulShift8( sum_buffer_[i], ~fuzz_gain << 1 );
+						}
+						break;
 					}
-					else // negative boost
-					{
-						sum_buffer_[i] = U8U8MulShift8( sum_buffer_[i], ~fuzz_gain << 1 );
-					}
-					break;
-				}    
+				}    // end switch
 			}
 	}
   }
