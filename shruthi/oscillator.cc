@@ -176,7 +176,7 @@ void Oscillator::RenderSimpleWavetableHMC(uint8_t* buffer, uint8_t* buffer2, uin
 		uint8_t sample2;
 		uint8_t sample3;
 		while (size--) {
-			//if (phase.integral & 16384)
+			//if (phase.integral & warp_check)
 			//{
 			//	phase_increment_int.integral -= warp_;
 			//	phase_increment_int2.integral -= warp_;
