@@ -564,7 +564,7 @@ void Oscillator::RenderCrushedSineHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t
 			if (decimate >= parameter_ + 1) {
 				decimate = 0;
 				held_sample = InterpolateSample(wav_res_sine, phase.integral + warp_);
-				held_sample2 = InterpolateSample(wav_res_sine, phase3.integral + warp_);
+				held_sample2 = InterpolateSample(wav_res_sine, phase2.integral + warp_);
 				held_sample3 = InterpolateSample(wav_res_sine, phase3.integral + warp_);
 			}
 		}
@@ -573,7 +573,7 @@ void Oscillator::RenderCrushedSineHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t
 			if (decimate >= parameter_ + 1) {
 				decimate = 0;
 				held_sample = InterpolateSample(wav_res_sine, phase.integral - warp_);
-				held_sample2 = InterpolateSample(wav_res_sine, phase3.integral - warp_);
+				held_sample2 = InterpolateSample(wav_res_sine, phase2.integral - warp_);
 				held_sample3 = InterpolateSample(wav_res_sine, phase3.integral - warp_);
 			}
 		}
@@ -583,7 +583,7 @@ void Oscillator::RenderCrushedSineHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t
 			if (decimate >= 128 - parameter_) {
 				decimate = 0;
 				held_sample = InterpolateSample(wav_res_bandlimited_triangle_0, phase.integral + warp_);
-				held_sample2 = InterpolateSample(wav_res_bandlimited_triangle_0, phase3.integral + warp_);
+				held_sample2 = InterpolateSample(wav_res_bandlimited_triangle_0, phase2.integral + warp_);
 				held_sample3 = InterpolateSample(wav_res_bandlimited_triangle_0, phase3.integral + warp_);
 			}
 		}
@@ -592,7 +592,7 @@ void Oscillator::RenderCrushedSineHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t
 			if (decimate >= 128 - parameter_) {
 				decimate = 0;
 				held_sample = InterpolateSample(wav_res_bandlimited_triangle_0, phase.integral - warp_);
-				held_sample2 = InterpolateSample(wav_res_bandlimited_triangle_0, phase3.integral - warp_);
+				held_sample2 = InterpolateSample(wav_res_bandlimited_triangle_0, phase2.integral - warp_);
 				held_sample3 = InterpolateSample(wav_res_bandlimited_triangle_0, phase3.integral - warp_);
 			}
 		}
