@@ -706,7 +706,7 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		case 5:	// stretch and fold (6)
+		case 5:	// stretch and fold dual (6)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -747,7 +747,7 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		case 6:	// fold (7)
+		case 6:	// stretch and fold single (7)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -773,7 +773,7 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		case 7:	// fold / shift - top and bottom
+		case 7:	// fold and split - top and bottom
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -811,6 +811,110 @@ void Voice::ProcessBlock() {
 				}
 			}
 			break;
+
+		case 8:		// sample flip
+			// MIX each byte
+			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+				// the mixed / multiplied oscillator and divisions
+				int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
+				// adjust byte_gain to buffer
+				sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust; 
+
+			}
+			// Distortion Mix
+			if(fuzz_gain)
+			{
+				if(fuzz_gain > 39)
+				{
+					fuzz_gain = 39 - fuzz_gain;
+				}
+				uint8_t temp_byte;
+				uint8_t offset_count;
+				uint8_t j;
+				// loop through half the bytes
+				for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					offset_count = i + fuzz_gain;
+					for (j = 0; j < fuzz_gain; j++) {
+						// check if limit reached
+						if (kAudioBlockSize <= j + offset_count)
+						{
+							break;
+						}
+						// switch bytes - 'fuzz_gain' samples apart
+						temp_byte = sum_buffer_[i + j];
+						sum_buffer_[i + j] = sum_buffer_[j + offset_count];
+						sum_buffer_[j + offset_count] = temp_byte;
+					}
+					// set new i value
+					i = j + offset_count - 1;
+				}
+			}
+			break;
+
+		case 9:		// sample reverse
+			// ### TODO ####
+			// MIX each byte
+			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+				// the mixed / multiplied oscillator and divisions
+				int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
+				// adjust byte_gain to buffer
+				sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust; 
+
+			}
+			// Distortion Mix
+			//fuzz_gain &= 31;
+			if(fuzz_gain)
+			{
+				uint8_t temp_byte;
+				uint8_t offset_count;
+				uint8_t j;
+				// loop through half the bytes
+				for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					offset_count = i + fuzz_gain;
+					for (j = 0; j <= fuzz_gain >> 1; j++) {
+						// check if limit reached
+						if ((offset_count - j) < kAudioBlockSize)
+						{
+							// switch bytes - 'fuzz_gain' samples apart
+							temp_byte = sum_buffer_[i + j];
+							sum_buffer_[i + j] = sum_buffer_[offset_count - j];
+							sum_buffer_[offset_count - j] = temp_byte;
+						}
+					}
+					// set new i value
+					i = offset_count;
+				}
+			}
+			break;
+
+		//case 10:		// sample delay
+		//	// ### TODO ####
+		//	// Add new byte to previous sum_buffer_[i] byte value before setting it
+		//	// Distortion Mix
+		//	//fuzz_gain &= 31;
+		//	if(fuzz_gain)
+		//	{
+		//		// MIX each byte
+		//		for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+		//			// the mixed / multiplied oscillator and divisions
+		//			int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
+		//			// old value adjust
+		//			// adjust byte_gain to buffer
+		//			sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust + ((sum_buffer_[i] - 128) >> 1); 
+		//		}
+		//	}
+		//	else
+		//	{
+		//		// MIX each byte
+		//		for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+		//			// the mixed / multiplied oscillator and divisions
+		//			int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
+		//			// adjust byte_gain to buffer
+		//			sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust; 
+
+		//		}
+		//	}
+		//	break;
 
 		// ### exceeds limit and wraps around - find clip limit NOT 255
 		// ##################

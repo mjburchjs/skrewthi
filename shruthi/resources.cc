@@ -309,11 +309,11 @@ static const prog_char str_res_sync[] PROGMEM = "bitrat";
 static const prog_char str_res_ring[] PROGMEM = "smprat";
 static const prog_char str_res_fuzz[] PROGMEM = "qtrshf";
 static const prog_char str_res_gg4[] PROGMEM = "flpbit";
-static const prog_char str_res_gg8[] PROGMEM = "strfld";
+static const prog_char str_res_gg8[] PROGMEM = "dblfld";
 static const prog_char str_res_fold[] PROGMEM = "fld";
-static const prog_char str_res_bits[] PROGMEM = "shffld";
-static const prog_char str_res_duo[] PROGMEM = "duo";
-static const prog_char str_res_2steps[] PROGMEM = "2steps";
+static const prog_char str_res_bits[] PROGMEM = "splfld";
+static const prog_char str_res_duo[] PROGMEM = "swtsam";
+static const prog_char str_res_2steps[] PROGMEM = "revsam";
 static const prog_char str_res_4steps[] PROGMEM = "4steps";
 static const prog_char str_res_8steps[] PROGMEM = "8steps";
 static const prog_char str_res_dist_type[] PROGMEM = "disttype";
@@ -829,11 +829,11 @@ PROGMEM const prog_char* const string_table[] = {
   str_res_gg8,
   str_res_fold,
   str_res_bits,
-  str_res__xor,
   str_res_duo,
   str_res_2steps,
   str_res_4steps,
   str_res_8steps,
+  str_res__xor,
   str_res_dist_type,
   str_res_stp,
   str_res_arp,
