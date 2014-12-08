@@ -87,7 +87,8 @@ class Patch {
   uint8_t shift_type;
   int8_t shift_amt;
   uint8_t shift_fine;
-  uint8_t warp_amt;
+  //uint8_t warp_amt;
+  uint8_t dist_type;
 
   // Offset: 12-16
   uint8_t filter_cutoff;
@@ -232,7 +233,8 @@ enum PatchParameter {
   PRM_SHIFT_TYPE,
   PRM_SHIFT_AMT,
   PRM_SHIFT_FINE,
-  PRM_WARP_AMT,
+  //PRM_WARP_AMT,
+  PRM_DIST_TYPE,
 
   PRM_FILTER_CUTOFF,
   PRM_FILTER_RESONANCE,
@@ -335,21 +337,18 @@ enum OscillatorAlgorithm {
 
 static const uint8_t kNumHiResWavetables = 1;
 
-//enum SubOscillatorAlgorithm {
-//  WAVEFORM_SUB_OSC_SQUARE_1,
-//  WAVEFORM_SUB_OSC_TRIANGLE_1,
-//  WAVEFORM_SUB_OSC_PULSE_1,
-//  WAVEFORM_SUB_OSC_SQUARE_2,
-//  WAVEFORM_SUB_OSC_TRIANGLE_2,
-//  WAVEFORM_SUB_OSC_PULSE_2,
-//  WAVEFORM_SUB_OSC_CLICK,
-//  WAVEFORM_SUB_OSC_GLITCH,
-//  WAVEFORM_SUB_OSC_BLOW,
-//  WAVEFORM_SUB_OSC_METALLIC,
-//  WAVEFORM_SUB_OSC_POP,
-//  WAVEFORM_SUB_OSC_LAST
-//};
-//
+enum DistortionType {
+  DIST_TYPE_OD,
+  DIST_TYPE_BIT_REDUCTION,
+  DIST_TYPE_SAMPLE_RATE,
+  DIST_TYPE_QUARTER_SHIFT,
+  DIST_TYPE_BIT_FLIP,
+  DIST_TYPE_STRETCH_FOLD,
+  DIST_TYPE_FOLD,
+  DIST_TYPE_SHIFT_FOLD,
+  DIST_TYPE_LAST
+};
+
 enum LfoWave {
   LFO_WAVEFORM_TRIANGLE,
   LFO_WAVEFORM_SQUARE,

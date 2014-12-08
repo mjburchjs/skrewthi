@@ -161,6 +161,7 @@ static const prog_uint16_t units_definitions[UNIT_LAST]
   STR_RES_LP,      // UNIT_FILTER_SP_MODE
   STR_RES_123,		// UNIT_DIVISIONS
   STR_RES_FSH,		// UNIT_SHIFT_TYPE
+  STR_RES_SUM,		// UNIT_DIST_TYPE
 };  // UNIT_LAST
 
 static const prog_char arp_pattern_prefix[4] PROGMEM = {
@@ -317,12 +318,19 @@ static const prog_Parameter parameters[kNumParameters] PROGMEM = {
     { 26, 0 },							// MIDI CC
     STR_RES_FIN, STR_RES_SHIFT_FINE }, 	// Short Name, Long Name
 
+  //// 11
+  //{ PRM_WARP_AMT,					// Patch Parameter
+  //  UNIT_RAW_UINT8,							// Value Type
+  //  0, 127,								// Min, Max
+  //  { 27, 0 },							// MIDI CC
+  //  STR_RES_WRP, STR_RES_WARP_AMT }, 	// Short Name, Long Name
+
   // 11
-  { PRM_WARP_AMT,					// Patch Parameter
-    UNIT_RAW_UINT8,							// Value Type
-    0, 127,								// Min, Max
+  { PRM_DIST_TYPE,						// Patch Parameter
+    UNIT_DIST_TYPE,						// Value Type
+    DIST_TYPE_OD, DIST_TYPE_LAST - 1,		// Min, Max
     { 27, 0 },							// MIDI CC
-    STR_RES_WRP, STR_RES_WARP_AMT }, 	// Short Name, Long Name
+    STR_RES_OD_TYPE, STR_RES_DIST_TYPE }, 	// Short Name, Long Name
 
   //// 8
   //{ PRM_OSC_OPTION_1,
@@ -378,7 +386,7 @@ static const prog_Parameter parameters[kNumParameters] PROGMEM = {
     UNIT_UINT8,								// Value Type
     0, 63,									// Min, Max
     { 31, 0 },								// MIDI CC
-    STR_RES__MIX , STR_RES_FUZZ },	// Short Name, Long Name
+    STR_RES__MIX , STR_RES_OVERDRIVE },	// Short Name, Long Name
   
   // ### END ###
 

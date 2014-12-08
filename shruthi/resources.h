@@ -443,7 +443,7 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 #define STR_RES_2STEPS 310  // 2steps
 #define STR_RES_4STEPS 311  // 4steps
 #define STR_RES_8STEPS 312  // 8steps
-#define STR_RES_SEQMIX 313  // seqmix
+#define STR_RES_DIST_TYPE 313  // disttype
 #define STR_RES_STP 314  // stp
 #define STR_RES___ARP 315  // arp
 #define STR_RES__SEQ 316  // seq

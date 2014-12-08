@@ -54,7 +54,7 @@ static const prog_char str_res_dst[] PROGMEM = "dst";
 static const prog_char str_res_amount[] PROGMEM = "amount";
 static const prog_char str_res_amt[] PROGMEM = "amt";
 static const prog_char str_res_mode[] PROGMEM = "mode";
-static const prog_char str_res_overdrive[] PROGMEM = "overdrive";
+static const prog_char str_res_overdrive[] PROGMEM = "distortion";
 static const prog_char str_res__fm[] PROGMEM = "fm";
 static const prog_char str_res_flavour[] PROGMEM = "flavour";
 static const prog_char str_res_time[] PROGMEM = "time";
@@ -304,19 +304,19 @@ static const prog_char str_res_classic_fcd72[] PROGMEM = "classic (fcd72)";
 static const prog_char str_res_full_control[] PROGMEM = "(full control)";
 static const prog_char str_res_lets_jam_[] PROGMEM = "let's jam!";
 static const prog_char str_res_extern[] PROGMEM = "extern";
-static const prog_char str_res_sum[] PROGMEM = "sum";
-static const prog_char str_res_sync[] PROGMEM = "sync";
-static const prog_char str_res_ring[] PROGMEM = "ring";
-static const prog_char str_res_fuzz[] PROGMEM = "Overdrive";
-static const prog_char str_res_gg4[] PROGMEM = ">>4";
-static const prog_char str_res_gg8[] PROGMEM = ">>8";
-static const prog_char str_res_fold[] PROGMEM = "fold";
-static const prog_char str_res_bits[] PROGMEM = "bits";
+static const prog_char str_res_sum[] PROGMEM = "ovrdrv";							// Start Distortion Types
+static const prog_char str_res_sync[] PROGMEM = "bitrat";
+static const prog_char str_res_ring[] PROGMEM = "smprat";
+static const prog_char str_res_fuzz[] PROGMEM = "qtrshf";
+static const prog_char str_res_gg4[] PROGMEM = "flpbit";
+static const prog_char str_res_gg8[] PROGMEM = "strfld";
+static const prog_char str_res_fold[] PROGMEM = "fld";
+static const prog_char str_res_bits[] PROGMEM = "shffld";
 static const prog_char str_res_duo[] PROGMEM = "duo";
 static const prog_char str_res_2steps[] PROGMEM = "2steps";
 static const prog_char str_res_4steps[] PROGMEM = "4steps";
 static const prog_char str_res_8steps[] PROGMEM = "8steps";
-static const prog_char str_res_seqmix[] PROGMEM = "seqmix";
+static const prog_char str_res_dist_type[] PROGMEM = "disttype";
 static const prog_char str_res_stp[] PROGMEM = "stp";
 static const prog_char str_res_free[] PROGMEM = "free";
 static const prog_char str_res_slave[] PROGMEM = "slave";
@@ -824,17 +824,17 @@ PROGMEM const prog_char* const string_table[] = {
   str_res_sum,
   str_res_sync,
   str_res_ring,
-  str_res__xor,
   str_res_fuzz,
   str_res_gg4,
   str_res_gg8,
   str_res_fold,
   str_res_bits,
+  str_res__xor,
   str_res_duo,
   str_res_2steps,
   str_res_4steps,
   str_res_8steps,
-  str_res_seqmix,
+  str_res_dist_type,
   str_res_stp,
   str_res_arp,
   str_res_seq,
