@@ -74,6 +74,7 @@ uint8_t Voice::volume_;
 //												11, 27, 43, 59, 75, 91, 107, 123	// 8
 //											};
 //
+static const uint8_t persistance_mask[] = { 1,2,3,4,5,6,7,8,9,10,12,13,14,15,16,20 };
 
 /* static */
 void Voice::Init() {
@@ -604,7 +605,7 @@ void Voice::ProcessBlock() {
 		//	sum_buffer_[i] = buffer_[i] ^ fuzz_gain;
 		//	break;
 
-		case 1:	// Bit Reduction - (Floor to every x values) (2) 
+		case DIST_TYPE_BIT_REDUCTION:	// Bit Reduction - (Floor to every x values) (2) 
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -617,19 +618,19 @@ void Voice::ProcessBlock() {
 				{
 					if(sum_buffer_[i] & 128)	// positive boost
 					{
-						sum_buffer_[i] = (sum_buffer_[i] & ~(fuzz_gain << 1)) + (fuzz_gain << 1);
+						sum_buffer_[i] = (sum_buffer_[i] & ~(fuzz_gain << 1)) + (fuzz_gain << 1);	// turn off bits if set -  add all bits back
 						//sum_buffer_[i] = (sum_buffer_[i] & bit_reduction_indices[fuzz_gain]) + ~bit_reduction_indices[fuzz_gain];
 					}
 					else // negative boost
 					{
-						sum_buffer_[i] &= ~(fuzz_gain << 1);
+						sum_buffer_[i] &= ~(fuzz_gain << 1);	// turn off bits if set
 						//sum_buffer_[i] = (sum_buffer_[i] & bit_reduction_indices[fuzz_gain]);
 					}
 				}
 			}
 			break;
 
-		case 2:	// Samplerate reduction (3)
+		case DIST_TYPE_SAMPLE_RATE:	// Samplerate reduction (3)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -640,6 +641,7 @@ void Voice::ProcessBlock() {
 				// Distortion Mix
 				if(fuzz_gain)
 				{
+					// limit to 32 byte reduction - reverse the second half
 					if(fuzz_gain & 32)
 					{
 						fuzz_gain = ~fuzz_gain & 31;
@@ -659,7 +661,7 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		case 3:	// Quarter Shift UP/DOWN/UP/DOWN (4)
+		case DIST_TYPE_QUARTER_SHIFT:	// Quarter Shift UP/DOWN/UP/DOWN (4)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -670,19 +672,19 @@ void Voice::ProcessBlock() {
 				// Distortion Mix
 				if(fuzz_gain)
 				{
-					if(!(~sum_buffer_[i] & 192)) // lower top quarter
+					if(!(~sum_buffer_[i] & 192))		// lower top quarter
 					{
 						sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
 					}
-					else if(!(sum_buffer_[i] & 192)) // raise bottom quarter
+					else if(!(sum_buffer_[i] & 192))	// raise bottom quarter
 					{
 						sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
 					}
-					else if(sum_buffer_[i] & 128) // raise top half
+					else if(sum_buffer_[i] & 128)		// raise top half
 					{
 						sum_buffer_[i] = U8AddClip(sum_buffer_[i], fuzz_gain, 255);
 					}
-					else // lower bottom half
+					else								// lower bottom half
 					{
 						sum_buffer_[i] = ~U8AddClip(~sum_buffer_[i], fuzz_gain, 255);
 					}
@@ -690,7 +692,7 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		case 4:	// flip bit - shift bottom to top and top to bottom (5)
+		case DIST_TYPE_BIT_FLIP:	// flip bit - shift bottom to top and top to bottom (5)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -701,12 +703,12 @@ void Voice::ProcessBlock() {
 				// Distortion Mix
 				if(fuzz_gain)
 				{
-					sum_buffer_[i] ^= ((fuzz_gain + 1) << 1);	// 0, 4, 6 ... 128
+					sum_buffer_[i] ^= ((fuzz_gain + 1) << 1);	// flip the bits - 0, 4, 6 ... 128
 				}
 			}
 			break;
 
-		case 5:	// stretch and fold dual (6)
+		case DIST_TYPE_STRETCH_FOLD:	// stretch and fold dual (6)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -719,35 +721,35 @@ void Voice::ProcessBlock() {
 				{
 					if(sum_buffer_[i] & 128)	// positive half
 					{
-						sum_buffer_[i] = U8U8Mul((sum_buffer_[i] & 127), fuzz_gain + 8) >> 3;	//  buffer * fuzz_gain / 32
+						sum_buffer_[i] = U8U8Mul((sum_buffer_[i] & 127), fuzz_gain + 4) >> 2;	//  + 8 >> 3 sounds better but pushes chip too far
 						// val over limit
 						if (sum_buffer_[i] & 128)
 						{
-							sum_buffer_[i] = ~sum_buffer_[i] | 128;	// subtract value from high limit 255
+							sum_buffer_[i] = ~sum_buffer_[i] | 128;		// subtract value from high limit 255
 						}
 						else
 						{
-							sum_buffer_[i] = sum_buffer_[i] | 128;
+							sum_buffer_[i] = sum_buffer_[i] | 128;		// add value
 						}
 					}
 					else	// negative half
 					{
-						sum_buffer_[i] = U8U8Mul((~sum_buffer_[i] & 127), fuzz_gain + 8) >> 3;	//  buffer * fuzz_gain / 32
+						sum_buffer_[i] = U8U8Mul((~sum_buffer_[i] & 127), fuzz_gain + 4) >> 2;
 						// val under limit
 						if(sum_buffer_[i] & 128)
 						{
-							sum_buffer_[i] = sum_buffer_[i] & 127;	// subtract value from high limit 255
+							sum_buffer_[i] = sum_buffer_[i] & 127;		// subtract value
 						}
 						else
 						{
-							sum_buffer_[i] = ~sum_buffer_[i] & 127;
+							sum_buffer_[i] = ~sum_buffer_[i] & 127;		// add value to bottom
 						}
 					}
 				}
 			}
 			break;
 
-		case 6:	// stretch and fold single (7)
+		case DIST_TYPE_FOLD:	// stretch and fold single (7)
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -758,7 +760,7 @@ void Voice::ProcessBlock() {
 				// Distortion Mix
 				if(fuzz_gain)
 				{
-					int16_t val = U8U8Mul(sum_buffer_[i], fuzz_gain + 16) >> 4;	//  buffer * fuzz_gain / 32
+					int16_t val = U8U8Mul(sum_buffer_[i], fuzz_gain + 4) >> 2;	//   + 16 >> 4 -- sounds better but pushes the chip too far
 					// OLD VERSION
 					//int16_t val = sum_buffer_[i] + (fuzz_gain << 2);	// value + 252
 					if(val & 256)
@@ -767,13 +769,13 @@ void Voice::ProcessBlock() {
 					}
 					else
 					{
-						sum_buffer_[i] = val;
+						sum_buffer_[i] = val;			// add value
 					}
 				}
 			}
 			break;
 
-		case 7:	// fold and split - top and bottom
+		case DIST_TYPE_SHIFT_FOLD:	// fold and split - top and bottom
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -793,7 +795,7 @@ void Voice::ProcessBlock() {
 						}
 						else
 						{
-							sum_buffer_[i] = val;
+							sum_buffer_[i] = val;			// add value
 						}
 					}
 					else // negative clip
@@ -801,18 +803,18 @@ void Voice::ProcessBlock() {
 						int16_t val = sum_buffer_[i] - (fuzz_gain << 2);
 						if(val < 0)
 						{
-							sum_buffer_[i] = ~val & 255;	// subtract value from high limit 255
+							sum_buffer_[i] = ~val & 255;	// subtract value
 						}
 						else
 						{
-							sum_buffer_[i] = val;
+							sum_buffer_[i] = val;			// add value to zero
 						}
 					}
 				}
 			}
 			break;
 
-		case 8:		// sample flip
+		case DIST_TYPE_SWITCH_SAMPLE:		// sample flip
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
 				// the mixed / multiplied oscillator and divisions
@@ -826,13 +828,14 @@ void Voice::ProcessBlock() {
 			{
 				if(fuzz_gain > 39)
 				{
-					fuzz_gain = 39 - fuzz_gain;
+					fuzz_gain = 78 - fuzz_gain;
 				}
 				uint8_t temp_byte;
 				uint8_t offset_count;
 				uint8_t j;
 				// loop through half the bytes
 				for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					// set the replace position
 					offset_count = i + fuzz_gain;
 					for (j = 0; j < fuzz_gain; j++) {
 						// check if limit reached
@@ -851,7 +854,7 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		case 9:		// sample reverse
+		case DIST_TYPE_REV_SAMPLE:		// sample reverse
 			// ### TODO ####
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
@@ -868,8 +871,9 @@ void Voice::ProcessBlock() {
 				uint8_t temp_byte;
 				uint8_t offset_count;
 				uint8_t j;
-				// loop through half the bytes
+				// loop through the bytes
 				for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+					// set the replace position
 					offset_count = i + fuzz_gain;
 					for (j = 0; j <= fuzz_gain >> 1; j++) {
 						// check if limit reached
@@ -887,34 +891,25 @@ void Voice::ProcessBlock() {
 			}
 			break;
 
-		//case 10:		// sample delay
-		//	// ### TODO ####
-		//	// Add new byte to previous sum_buffer_[i] byte value before setting it
-		//	// Distortion Mix
-		//	//fuzz_gain &= 31;
-		//	if(fuzz_gain)
-		//	{
-		//		// MIX each byte
-		//		for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-		//			// the mixed / multiplied oscillator and divisions
-		//			int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
-		//			// old value adjust
-		//			// adjust byte_gain to buffer
-		//			sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust + ((sum_buffer_[i] - 128) >> 1); 
-		//		}
-		//	}
-		//	else
-		//	{
-		//		// MIX each byte
-		//		for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
-		//			// the mixed / multiplied oscillator and divisions
-		//			int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
-		//			// adjust byte_gain to buffer
-		//			sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust; 
-
-		//		}
-		//	}
-		//	break;
+		case DIST_TYPE_DELAY_PERSISTANCE:		// sample persistence
+			// MIX each byte
+			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
+				// the mixed / multiplied oscillator and divisions
+				int16_t byte_gain_ = U8U8Mul(buffer_[i], root_gain) + U8U8Mul(osc2_buffer_[i], div1_gain) + U8U8Mul(osc3_buffer_[i], div2_gain);
+				// adjust byte_gain to buffer
+				if (!fuzz_gain)
+				{
+					sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust; 
+				}
+				else
+				{
+					if (i & ~fuzz_gain)		// replace value when bit is set
+					{
+						sum_buffer_[i] = (byte_gain_ >> 7) + center_adjust; 
+					}
+				}
+			}
+			break;
 
 		// ### exceeds limit and wraps around - find clip limit NOT 255
 		// ##################
@@ -931,10 +926,6 @@ void Voice::ProcessBlock() {
 		//		break;
 		//	}
 
-		//case 9:	// rotate - NO BOOST - like exceeding hardware limit - REMOVE
-		//	sum_buffer_[i] = ((sum_buffer_[i] + fuzz_gain - center_adjust) % 255) + center_adjust;	// too high values appear low 
-		//	break;
-
 		default:	// OD - reduce distance between value and nearest limit 0 or 255
 			// MIX each byte
 			for (uint8_t i = 0; i < kAudioBlockSize; ++i) {
@@ -948,11 +939,11 @@ void Voice::ProcessBlock() {
 				{
 					if(sum_buffer_[i] & 128)	// positive boost
 					{
-						sum_buffer_[i] += U8U8MulShift8( ~sum_buffer_[i], fuzz_gain << 2 );
+						sum_buffer_[i] += U8U8MulShift8( ~sum_buffer_[i], fuzz_gain << 2 );	// reduce distance between value and limit
 					}
 					else // negative boost
 					{
-						sum_buffer_[i] = U8U8MulShift8( sum_buffer_[i], ~fuzz_gain << 2 );
+						sum_buffer_[i] = U8U8MulShift8( sum_buffer_[i], ~fuzz_gain << 2 );	// reduce distance between value and limit
 					}
 				}
 			}
