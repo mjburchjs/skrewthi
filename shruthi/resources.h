@@ -237,43 +237,38 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 #define STR_RES_WOBBLY 119  // wobbly
 #define STR_RES_WHACKY 120  // whacky
 #define STR_RES_PW1 121  // pw1					// START SHORT DESTINATIONS
-//#define STR_RES_PW2 122  // pw2
 #define STR_RES_51 122  // 1
-//#define STR_RES_52 124  // 2
-//#define STR_RES_5 125  // 
 #define STR_RES_5F 123  // f
 #define STR_RES_MIX 124  // mix
-//#define STR_RES_NOI 128  // noi
-//#define STR_RES_SUB 129  // sub
-
 // ### ADDED ###
 #define STR_RES_RT_VOL 125
 #define STR_RES_D1_VOL 126
 #define STR_RES_D2_VOL 127
-#define STR_RES_OD_TYPE 128
+#define STR_RES_SHF_TYPE 128
 #define STR_RES_SHF_AMT 129
 #define STR_RES_SH_FINE 130
-#define STR_RES_WRP_DEST 131
-#define STR_RES_DIVS 132
+#define STR_RES_DIVS 131
 
-#define STR_RES_CUT 133  // cut
-#define STR_RES_RES 134  // res
-#define STR_RES_VCA 135  // vca
-#define STR_RES_CV1 136  // cv1
-#define STR_RES_CV2 137  // cv2
-#define STR_RES_TR1 138  // tr1
-#define STR_RES_A1 139  // a1
-#define STR_RES_D1 140  // d1
-#define STR_RES_S1 141  // s1
-#define STR_RES_R1 142  // r1
-#define STR_RES_TR2 143  // tr2
-#define STR_RES_A2 144  // a2
-#define STR_RES_D2 145  // d2
-#define STR_RES_S2 146  // s2
-#define STR_RES_R2 147  // r2
-#define STR_RES__ATK 148  // atk
-#define STR_RES__LF1 149  // lf1
-#define STR_RES__LF2 150  // lf2
+#define STR_RES_CUT 132  // cut
+#define STR_RES_RES 133  // res
+#define STR_RES_VCA 134  // vca
+#define STR_RES_CV1 135  // cv1
+#define STR_RES_CV2 136  // cv2
+#define STR_RES_TR1 137  // tr1
+#define STR_RES_A1 138  // a1
+#define STR_RES_D1 139  // d1
+#define STR_RES_S1 140  // s1
+#define STR_RES_R1 141  // r1
+#define STR_RES_TR2 142  // tr2
+#define STR_RES_A2 143  // a2
+#define STR_RES_D2 144  // d2
+#define STR_RES_S2 145  // s2
+#define STR_RES_R2 146  // r2
+#define STR_RES__ATK 147  // atk
+#define STR_RES__LF1 148  // lf1
+#define STR_RES__LF2 149  // lf2
+#define STR_RES_WRP_DEST 130
+
 #define STR_RES_IN1 151  // in1
 #define STR_RES_IN2 152  // in2
 #define STR_RES_OUT 153  // out
@@ -291,39 +286,35 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 #define STR_RES_OSC1 165  // osc1
 #define STR_RES_FINE 166  // fine
 #define STR_RES__MIX 167  // fuzz
-//#define STR_RES_PWM2 162  // pwm2
-//#define STR_RES_OSC2 164  // osc2
-//#define STR_RES_OSC1S2 165  // osc1+2
-//#define STR_RES_NOISE 168  // noise
-//#define STR_RES_SUBOSC 169  // subosc
 // ### ADDED ###
 #define STR_RES_ROOT_VOL 168
 #define STR_RES_DIV1_VOL 169
 #define STR_RES_DIV2_VOL 170
-#define STR_RES_DIV3_VOL 171
+#define STR_RES_SHF_TYPE 171
 #define STR_RES_SHIFT_AMT 172
 #define STR_RES_SHIFT_FINE 173
-#define STR_RES_WARP 174
-#define STR_RES_DIVISIONS 175
+#define STR_RES_DIVISIONS 174
 
-#define STR_RES_CUTOFF 176  // cutoff
-#define STR_RES_RESO 177  // reso
-#define STR_RES__VCA 178  // vca
-#define STR_RES_CV_1 179  // cv 1
-#define STR_RES_CV_2 180  // cv 2
-#define STR_RES_TRG_E1 181  // trg e1
-#define STR_RES_ATK__1 182  // atk. 1
-#define STR_RES_DEC__1 183  // dec. 1
-#define STR_RES_SUS__1 184  // sus. 1
-#define STR_RES_REL__1 185  // rel. 1
-#define STR_RES_TRG_E2 186  // trg e2
-#define STR_RES_ATK__2 187  // atk. 2
-#define STR_RES_DEC__2 188  // dec. 2
-#define STR_RES_SUS__2 189  // sus. 2
-#define STR_RES_REL__2 190  // rel. 2
-#define STR_RES_ATK1S2 191  // atk1+2
-#define STR_RES__LFO_1 192  // lfo 1
-#define STR_RES__LFO_2 193  // lfo 2
+#define STR_RES_CUTOFF 175  // cutoff
+#define STR_RES_RESO 176  // reso
+#define STR_RES__VCA 177  // vca
+#define STR_RES_CV_1 178  // cv 1
+#define STR_RES_CV_2 179  // cv 2
+#define STR_RES_TRG_E1 180  // trg e1
+#define STR_RES_ATK__1 181  // atk. 1
+#define STR_RES_DEC__1 182  // dec. 1
+#define STR_RES_SUS__1 183  // sus. 1
+#define STR_RES_REL__1 184  // rel. 1
+#define STR_RES_TRG_E2 185  // trg e2
+#define STR_RES_ATK__2 186  // atk. 2
+#define STR_RES_DEC__2 187  // dec. 2
+#define STR_RES_SUS__2 188  // sus. 2
+#define STR_RES_REL__2 189  // rel. 2
+#define STR_RES_ATK1S2 190  // atk1+2
+#define STR_RES__LFO_1 191  // lfo 1
+#define STR_RES__LFO_2 192  // lfo 2
+#define STR_RES_WARP_DEST 193
+
 #define STR_RES_DISTRT 194  // distrt
 #define STR_RES_CRUSHR 195  // crushr
 #define STR_RES_SCMBFL 196  // +cmbfl
@@ -509,28 +500,29 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 #define STR_RES_SAW 376  // saw
 #define STR_RES_SQUARE 377  // square
 #define STR_RES_TRIANG 378  // triang
-#define STR_RES_8BITS 379  // 8bits
-#define STR_RES_CRUSH 380  // crush
-#define STR_RES_WAVES 381  // waves
-#define STR_RES_TAMPUR 382  // tampur
-#define STR_RES_DIGITL 383  // digitl
-#define STR_RES_METALL 384  // metall
-#define STR_RES_BOWED 385  // bowed
-#define STR_RES_SLAP 386  // slap
-#define STR_RES_ORGAN 387  // organ
-#define STR_RES_MALE 388  // male
-#define STR_RES_BELISH 389  // belish
-#define STR_RES_POLATD 390  // polatd
-#define STR_RES_CELLO 391  // cello
-#define STR_RES_CLPSWP 392  // clpswp
-#define STR_RES_FEMALE 393  // female
-#define STR_RES_FMTVOC 394  // fmtvoc
-#define STR_RES_FRMNT2 395  // frmnt2
-#define STR_RES_RES3HP 396  // res3hp
-#define STR_RES_ELECTP 397  // electp
-#define STR_RES_VIBES 398  // vibes
-//#define STR_RES_ZSAW 379  // zsaw
-//#define STR_RES_ZRESO 380  // zreso
+#define STR_RES_SINE_TYPE 379  // 8bits
+#define STR_RES_SAW2 380  // crush
+#define STR_RES_SQUARE2 381  // zsaw
+#define STR_RES_TRIANG2 382  // zreso
+#define STR_RES_SINE2_TYPE 383  // vowel
+#define STR_RES_WAVES 384  // waves
+#define STR_RES_TAMPUR 385  // tampur
+#define STR_RES_DIGITL 386  // digitl
+#define STR_RES_METALL 387  // metall
+#define STR_RES_BOWED 388  // bowed
+#define STR_RES_SLAP 389  // slap
+#define STR_RES_ORGAN 390  // organ
+#define STR_RES_MALE 391  // male
+#define STR_RES_BELISH 392  // belish
+#define STR_RES_POLATD 393  // polatd
+#define STR_RES_CELLO 394  // cello
+#define STR_RES_CLPSWP 395  // clpswp
+#define STR_RES_FEMALE 396  // female
+#define STR_RES_FMTVOC 397  // fmtvoc
+#define STR_RES_FRMNT2 398  // frmnt2
+#define STR_RES_RES3HP 399  // res3hp
+#define STR_RES_ELECTP 400  // electp
+#define STR_RES_VIBES 401  // vibes
 //#define STR_RES_ZTRI 381  // ztri
 //#define STR_RES_ZPULSE 382  // zpulse
 //#define STR_RES_ZSYNC 383  // zsync
@@ -539,7 +531,6 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 //#define STR_RES_USER 394  // user
 //#define STR_RES_PWM 397  // pwm
 //#define STR_RES___NOISE 398  // noise
-//#define STR_RES_VOWEL 399  // vowel
 #define STR_RES__LPF 410  // lpf
 #define STR_RES_SSM 411  // ssm
 #define STR_RES_SVF 412  // svf
@@ -591,8 +582,8 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 #define STR_RES_DIV1LEVEL 457	// div1 lvl
 #define STR_RES_DIV2LVL 458	// 2lvl
 #define STR_RES_DIV2LEVEL 459	// div2 lvl
-#define STR_RES_DIV3LVL 460	// 3lvl
-#define STR_RES_DIV3LEVEL 461	// div3 lvl
+#define STR_RES_OD_TYPE 460	// 3lvl
+#define STR_RES_OVERDRIVE_TYPE 461	// div3 lvl
 #define STR_RES_DIVISION 462	// division
 #define STR_RES_DIV 463	// div
 #define STR_RES_SHIFT_TYPE 464	// shft typ
@@ -640,7 +631,7 @@ extern const prog_uint8_t chr_res_special_characters[] PROGMEM;
 #define STR_RES_FS1 504	// esy
 #define STR_RES_FER 505	// psy
 
-#define SHIFT_MIN_VAL -63
+#define SHIFT_MIN_VAL -64
 #define SHIFT_MAX_VAL 63
 
 #define LUT_RES_LFO_INCREMENTS 0

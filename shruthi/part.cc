@@ -144,7 +144,7 @@ static const prog_char init_patch[] PROGMEM = {
 	// Levels
     63, 0, 0, 0,
     // Effects
-    0, 0, 0, 0,
+    0, 64, 0, 0,
     // Filter
     127, 0, 63, 0,
     // ADSR
@@ -769,8 +769,11 @@ const prog_uint8_t filter_modes[15] PROGMEM = {
 uint8_t Part::blinky_eyes() {
   uint8_t blinky = 0;
   if (running() && sequencer_settings_.mode() != SEQUENCER_MODE_STEP) {
-    if (!(arp_seq_step_ & 3)) {
-      blinky = 0xc0;
+	if (!(arp_seq_step_ & 3)) {
+      blinky = 0x40;
+	}
+    else if (!(arp_seq_step_ & 1)) {
+      blinky = 0x80;
     }
   } else if (modulation_source(0, MOD_SRC_WHEEL) > 224) {
     uint8_t i = kModulationMatrixSize - 1;
@@ -781,8 +784,13 @@ uint8_t Part::blinky_eyes() {
     } else if (wheel_mod < 0x40) {
       blinky = 0x40;
     }
-  } else if (patch_.filter_resonance > 56) {
-    blinky = 0xc0;
+  } else {
+	  if (patch_.filter_resonance > 56) {
+	    blinky = 0x80;
+      } 
+	  if (patch_.fuzz_lvl > 56) {
+        blinky += 0x40;
+	  }
   }
   return blinky;
 }

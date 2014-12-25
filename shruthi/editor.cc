@@ -1145,23 +1145,17 @@ void Editor::IncrementParameterValue(uint8_t index, int8_t increment) {
 
 const prog_uint8_t modulation_destination_map[] PROGMEM = {
   MOD_DST_PWM_1,
-  //MOD_DST_PWM_2,
   MOD_DST_VCO_1,
-  //MOD_DST_VCO_2,
-  //MOD_DST_VCO_1_2_COARSE,
   MOD_DST_VCO_1_2_FINE,
   MOD_DST_MIX_FUZZ,
-  //MOD_DST_MIX_NOISE,
-  //MOD_DST_MIX_SUB_OSC,
 
   // ### ADDED ###
   MOD_DST_ROOT_VOL,
   MOD_DST_DIV1_VOL,
   MOD_DST_DIV2_VOL,
-  MOD_DST_OD_TYPE,
+  MOD_DST_SHIFT_TYPE,
   MOD_DST_SHIFT_AMT,
   MOD_DST_SHIFT_FINE,
-  MOD_DST_WARP,
   MOD_DST_DIVISIONS,
 
   MOD_DST_FILTER_CUTOFF,

@@ -85,9 +85,8 @@ class Patch {
 
   // Offset: 8-12
   uint8_t shift_type;
-  int8_t shift_amt;
+  uint8_t shift_amt;
   uint8_t shift_fine;
-  //uint8_t warp_amt;
   uint8_t dist_type;
 
   // Offset: 12-16
@@ -148,7 +147,6 @@ enum ModulationSource {
   MOD_SRC_CC_B,
   MOD_SRC_CC_C,
   MOD_SRC_CC_D,
-  //MOD_SRC_NOISE,
 
   /* Then those which are different for each note. */
   MOD_SRC_ENV_1,
@@ -183,10 +181,9 @@ enum ModulationDestination {
   MOD_DST_ROOT_VOL,
   MOD_DST_DIV1_VOL,
   MOD_DST_DIV2_VOL,
-  MOD_DST_OD_TYPE,
+  MOD_DST_SHIFT_TYPE,
   MOD_DST_SHIFT_AMT,
   MOD_DST_SHIFT_FINE,
-  MOD_DST_WARP,
   MOD_DST_DIVISIONS,
 
   MOD_DST_FILTER_RESONANCE,
@@ -217,23 +214,14 @@ enum PatchParameter {
   PRM_OSC_RANGE_1,
   PRM_OSC_OPTION_1,
 
-  //PRM_OSC_SHAPE_2,
-  //PRM_OSC_PARAMETER_2,
-  //PRM_OSC_RANGE_2,
-  //PRM_OSC_OPTION_2,
   PRM_ROOT_LVL,
   PRM_DIV1_LVL,
   PRM_DIV2_LVL,
   PRM_FUZZ_LVL,
 
-  //PRM_MIX_BALANCE,
-  //PRM_MIX_SUB_OSC,
-  //PRM_MIX_NOISE,
-  //PRM_MIX_SUB_OSC_SHAPE,
   PRM_SHIFT_TYPE,
   PRM_SHIFT_AMT,
   PRM_SHIFT_FINE,
-  //PRM_WARP_AMT,
   PRM_DIST_TYPE,
 
   PRM_FILTER_CUTOFF,
@@ -301,15 +289,11 @@ enum OscillatorAlgorithm {
   WAVEFORM_SAW,
   WAVEFORM_SQUARE,
   WAVEFORM_TRIANGLE,
-  //WAVEFORM_CZ_SAW,
-  //WAVEFORM_CZ_RESO,
-  //WAVEFORM_CZ_TRIANGLE,
-  //WAVEFORM_CZ_PULSE,
-  //WAVEFORM_CZ_SYNC,
-  //WAVEFORM_QUAD_SAW_PAD,
-  //WAVEFORM_FM,
-  WAVEFORM_8BITLAND,
-  WAVEFORM_CRUSHED_SINE,
+  WAVEFORM_SINE,
+  WAVEFORM_SAW2,
+  WAVEFORM_SQUARE2,
+  WAVEFORM_TRIANGLE2,
+  WAVEFORM_SINE2,
   WAVEFORM_WAVETABLE_1,
   WAVEFORM_WAVETABLE_2,
   WAVEFORM_WAVETABLE_3,
@@ -318,10 +302,6 @@ enum OscillatorAlgorithm {
   WAVEFORM_WAVETABLE_6,
   WAVEFORM_WAVETABLE_7,
   WAVEFORM_WAVETABLE_8,
-  //WAVEFORM_WAVETABLE_USER,
-  //WAVEFORM_DIRTY_PWM,
-  //WAVEFORM_FILTERED_NOISE,
-  //WAVEFORM_VOWEL,
   WAVEFORM_WAVETABLE_9,
   WAVEFORM_WAVETABLE_10,
   WAVEFORM_WAVETABLE_11,
@@ -339,6 +319,7 @@ static const uint8_t kNumHiResWavetables = 1;
 
 enum DistortionType {
   DIST_TYPE_OD,
+  DIST_TYPE_HALF_OD,
   DIST_TYPE_BIT_REDUCTION,
   DIST_TYPE_SAMPLE_RATE,
   DIST_TYPE_QUARTER_SHIFT,
@@ -348,7 +329,6 @@ enum DistortionType {
   DIST_TYPE_SHIFT_FOLD,
   DIST_TYPE_SWITCH_SAMPLE,
   DIST_TYPE_REV_SAMPLE,
-  DIST_TYPE_DELAY_PERSISTANCE,
   DIST_TYPE_LAST
 };
 
@@ -390,18 +370,6 @@ enum Status {
   ON
 };
 
-//enum Operator {
-//  OP_SUM,
-//  OP_SYNC,
-//  OP_RING_MOD,
-//  OP_XOR,
-//  OP_FUZZ,
-//  OP_CRUSH_4,
-//  OP_CRUSH_8,
-//  OP_FOLD,
-//  OP_LAST
-//};
-//
 enum CvOperator {
   OP_CV_NONE,
   OP_CV_SUM,

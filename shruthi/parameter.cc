@@ -162,6 +162,7 @@ static const prog_uint16_t units_definitions[UNIT_LAST]
   STR_RES_123,		// UNIT_DIVISIONS
   STR_RES_FSH,		// UNIT_SHIFT_TYPE
   STR_RES_SUM,		// UNIT_DIST_TYPE
+  0,
 };  // UNIT_LAST
 
 static const prog_char arp_pattern_prefix[4] PROGMEM = {
@@ -227,6 +228,21 @@ void Parameter::PrintValue(uint8_t value, char* buffer, uint8_t width) const {
         ++value;
       }
       break;
+	case UNIT_SHIFT_AMT:
+		if(!value)
+		{
+			prefix = '-';
+			value = 64;
+		}
+		else if (value < 64)
+		{
+			prefix = '-';
+			value = (~value + 1) & 63;
+		}
+		else
+		{
+			value -= 64;
+		}
   }
   if (prefix) {
     *buffer++ = prefix;
@@ -262,6 +278,7 @@ static const prog_Parameter parameters[kNumParameters] PROGMEM = {
     { 22, 0 },
     STR_RES_RNG, STR_RES_RANGE },
 
+  // ### ADDED ###
   // 3
   { PRM_OSC_OPTION_1,
     UNIT_DIVISIONS,
@@ -269,119 +286,57 @@ static const prog_Parameter parameters[kNumParameters] PROGMEM = {
     { 23, 0 },
     STR_RES_DIV , STR_RES_DIVISION }, 
 
-  //// 4
-  //{ PRM_OSC_SHAPE_2,
-  //  UNIT_WAVEFORM,
-  //  WAVEFORM_NONE, WAVEFORM_LAST - 1,
-  //  { 24, 0 },
-  //  STR_RES_SHAPE, STR_RES_SHAPE },
-
-  //// 5
-  //{ PRM_OSC_PARAMETER_2,
-  //  UNIT_RAW_UINT8,
-  //  0, 127,
-  //  { 25, 0 },
-  //  STR_RES_PRM, STR_RES_PARAMETER }, 
-
-  //// 6
-  //{ PRM_OSC_RANGE_2,
-  //  UNIT_INT8,
-  //  -24, 24,
-  //  { 26, 0 },
-  //  STR_RES_RNG, STR_RES_RANGE }, 
-
-  //// 7
-  //{ PRM_OSC_OPTION_2,
-  //  UNIT_RAW_UINT8,
-  //  0, 127,
-  //  { 27, 0 },
-  //  STR_RES_TUNING, STR_RES_DETUNE }, 
-  // ### ADDED ###
-  // 8
+  // 4
   { PRM_SHIFT_TYPE,						// Patch Parameter
     UNIT_SHIFT_TYPE,					// Value Type
     0, 5,								// Min, Max
     { 24, 0 },							// MIDI CC
     STR_RES_STY, STR_RES_SHIFT_TYPE },	// Short Name, Long Name
     
-  // 9
+  // 5
   { PRM_SHIFT_AMT,						// Patch Parameter
-    UNIT_INT8,							// Value Type
-    SHIFT_MIN_VAL, SHIFT_MAX_VAL,							// Min, Max
+    UNIT_SHIFT_AMT,							// Value Type
+    0, 127,							// Min, Max
     { 25, 0 },							// MIDI CC
     STR_RES_SHF, STR_RES_SHIFT_LN }, 	// Short Name, Long Name
 
-  // 10
+  // 6
   { PRM_SHIFT_FINE,						// Patch Parameter
     UNIT_RAW_UINT8,						// Value Type
     0, 127,								// Min, Max
     { 26, 0 },							// MIDI CC
     STR_RES_FIN, STR_RES_SHIFT_FINE }, 	// Short Name, Long Name
 
-  //// 11
-  //{ PRM_WARP_AMT,					// Patch Parameter
-  //  UNIT_RAW_UINT8,							// Value Type
-  //  0, 127,								// Min, Max
-  //  { 27, 0 },							// MIDI CC
-  //  STR_RES_WRP, STR_RES_WARP_AMT }, 	// Short Name, Long Name
-
-  // 11
+  // 7
   { PRM_DIST_TYPE,						// Patch Parameter
     UNIT_DIST_TYPE,						// Value Type
     DIST_TYPE_OD, DIST_TYPE_LAST - 1,		// Min, Max
     { 27, 0 },							// MIDI CC
     STR_RES_OD_TYPE, STR_RES_DIST_TYPE }, 	// Short Name, Long Name
 
-  //// 8
-  //{ PRM_OSC_OPTION_1,
-  //  UNIT_OPERATOR,
-  //  0, OP_LAST - 1,
-  //  { 28, 0 },
-  //  STR_RES_OP_, STR_RES_OPERATOR }, 
-
-  //// 9
-  //{ PRM_MIX_BALANCE,
-  //  UNIT_UINT8,
-  //  0, 63,
-  //  { 29, 0 },
-  //  STR_RES_MIX, STR_RES_OSC_MIX }, 
-
-  //// 10
-  //{ PRM_MIX_SUB_OSC,
-  //  UNIT_UINT8,
-  //  0, 63,
-  //  { 30, 0 },
-  //  STR_RES_SUB, STR_RES_SUB_OSC_ }, 
-
-  //// 11
-  //{ PRM_MIX_NOISE,
-  //  UNIT_UINT8,
-  //  0, 63,
-  //  { 31, 0 },
-  //  STR_RES_NOI, STR_RES_NOISE }, 
   // ### ADDED ###
-  // 4
+  // 8
   { PRM_ROOT_LVL,							// Patch Parameter
     UNIT_UINT8,								// Value Type
     0, 63,									// Min, Max
     { 28, 0 },								// MIDI CC
     STR_RES_ROOTLVL, STR_RES_ROOTLEVEL },	// Short Name, Long Name
 
-  // 5
+  // 9
   { PRM_DIV1_LVL,							// Patch Parameter
     UNIT_UINT8,								// Value Type
     0, 63,									// Min, Max
     { 29, 0 },								// MIDI CC
     STR_RES_DIV1LVL , STR_RES_DIV1LEVEL  },	// Short Name, Long Name
 
-  // 6
+  // 10
   { PRM_DIV2_LVL,							// Patch Parameter
     UNIT_UINT8,								// Value Type
     0, 63,									// Min, Max
     { 30, 0 },								// MIDI CC
     STR_RES_DIV2LVL , STR_RES_DIV2LEVEL  },	// Short Name, Long Name
 
-  // 7
+  // 11
   { PRM_FUZZ_LVL,							// Patch Parameter
     UNIT_UINT8,								// Value Type
     0, 63,									// Min, Max

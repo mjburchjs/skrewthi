@@ -40,33 +40,34 @@ namespace shruthi {
 static const uint8_t oDivisions[] = { 10, 11, 12, 13, 14, 15,  8, 19, 20, 21, 22, 23, 16, 
 								  //3-4,3-5,3-6,3-7,3-8,4-5,4-6,4-7,4-8,5-6,5-7,5-8,6-7,6-8,7-8
 									28, 29, 30, 31, 24, 37, 38, 39, 32, 46, 47, 40, 55, 48, 56};
-
-static const uint8_t twelth_rem[] = {  0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11,
-										0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11
+// remainders for semitone shift amounts
+static const uint8_t twelth_rem[] = {  32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24, 
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
+										32, 40, 48, 56, 64, 72, 80, 88, 0, 8, 16, 24,
 }; 
-static const uint8_t twelth_div[] = {  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-										1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
-										2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2,
-										3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3,
-										4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 4, 
-										5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5, 5,
-										6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6, 6,
-										7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7, 7,
-										8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8, 8,
-										9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9, 9,
-										10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
+// octaves for semitone shift amounts
+static const uint8_t twelth_div[] = {  0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,
+										1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2,
+										2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3,
+										3, 3, 3, 3, 3, 3, 3, 3, 4, 4, 4, 4,
+										4, 4, 4, 4, 4, 4, 4, 4, 5, 5, 5, 5, 
+										5, 5, 5, 5, 5, 5, 5, 5, 6, 6, 6, 6,
+										6, 6, 6, 6, 6, 6, 6, 6, 7, 7, 7, 7,
+										7, 7, 7, 7, 7, 7, 7, 7, 8, 8, 8, 8,
+										8, 8, 8, 8, 8, 8, 8, 8, 9, 9, 9, 9,
+										9, 9, 9, 9, 9, 9, 9, 9, 10, 10, 10, 10,
+										10, 10, 10, 10, 10, 10, 10, 10, 11, 11, 11, 11
 }; 
-
-enum ShiftType { F_SHIFT, F_EVEN, P_SHIFT, F_SHIFT_SYNC_R, F_EVEN_SYNC_R, P_SHIFT_SYNC_R};//, F_SHIFT_SYNC_1, F_EVEN_SYNC_1, P_SHIFT_SYNC_1};
+// six types of division shifts
+enum ShiftType { F_SHIFT, F_EVEN, P_SHIFT, F_SHIFT_SYNC_R, F_EVEN_SYNC_R, P_SHIFT_SYNC_R, LAST_SHIFT_TYPE};
 static const int8_t MIN_SHIFT_AMOUNT = -63;
 static const int8_t MAX_SHIFT_AMOUNT = 63;
 
@@ -79,49 +80,6 @@ static inline uint8_t ReadSample(
   return ResourcesManager::Lookup<uint8_t, uint8_t>(table, phase >> 8);
 }
 
-#ifdef USE_OPTIMIZED_OP
-
-static inline uint8_t InterpolateSampleRam(
-    const uint8_t* table,
-    uint16_t phase) __attribute__((always_inline));
-
-
-static inline uint8_t InterpolateSampleRam(
-    const uint8_t* table,
-    uint16_t phase) {
-  uint8_t result;
-  uint8_t work;
-  asm(
-    "movw r30, %A2"           "\n\t"  // copy base address to r30:r31
-    "add r30, %B3"            "\n\t"  // increment table address by phaseH
-    "adc r31, r1"             "\n\t"  // just carry
-    "mov %1, %A3"             "\n\t"  // move phaseL to working register
-    "ld %0, z+"               "\n\t"  // load sample[n]
-    "ld r1, z+"               "\n\t"  // load sample[n+1]
-    "mul %1, r1"              "\n\t"  // multiply second sample by phaseL
-    "movw r30, r0"            "\n\t"  // result to accumulator
-    "com %1"                  "\n\t"  // 255 - phaseL -> phaseL
-    "mul %1, %0"              "\n\t"  // multiply first sample by phaseL
-    "add r30, r0"             "\n\t"  // accumulate L
-    "adc r31, r1"             "\n\t"  // accumulate H
-    "eor r1, r1"              "\n\t"  // reset r1 after multiplication
-    "mov %0, r31"             "\n\t"  // use sum H as output
-    : "=r" (result), "=r" (work)
-    : "r" (table), "r" (phase)
-    : "r30", "r31"
-  );
-  return result;
-}
-
-#else
-
-static inline uint8_t InterpolateSampleRam(
-    const uint8_t* table,
-    uint16_t phase) {
-  return U8Mix(table[phase >> 8], table[1 + (phase >> 8)], phase & 0xff);
-}
-#endif  // USE_OPTIMIZED_OP
-
 static inline uint8_t InterpolateTwoTables(
     const prog_uint8_t* table_a, const prog_uint8_t* table_b,
     uint16_t phase, uint8_t gain_a, uint8_t gain_b) {
@@ -131,54 +89,15 @@ static inline uint8_t InterpolateTwoTables(
       gain_a, gain_b);
 }
 
-static const uint8_t kVowelControlRateDecimation = 4;
-static const uint8_t kNumZonesFullSampleRate = 6;
-static const uint8_t kNumZonesHalfSampleRate = 5;
-
-struct VowelSynthesizerState {
-  uint16_t formant_increment[3];
-  uint16_t formant_phase[3];
-  uint8_t formant_amplitude[3];
-  uint8_t noise_modulation;
-  uint8_t update;  // Update only every kVowelControlRateDecimation-th call.
-};
-
-struct FilteredNoiseState {
-  uint8_t lp_noise_sample;
-  uint16_t rng_state;
-  uint16_t rng_reset_value;
-};
-
-struct QuadSawPadState {
-  uint16_t phase[3];
-};
-
-struct CrushedSineState {
-  uint8_t decimate;
-  uint8_t state;
-};
-
-union OscillatorState {
-  VowelSynthesizerState vw;
-  FilteredNoiseState no;
-  QuadSawPadState qs;
-  CrushedSineState cr;
-  uint16_t secondary_phase;
-  uint16_t secondary_phase2;
-  uint16_t secondary_phase3;
-};
-
 class Oscillator {
  public:
- // typedef void (Oscillator::*RenderFn)(uint8_t*);
    
   Oscillator() { }
   ~Oscillator() { }
   
-  inline void Reset() {
-    data_.no.rng_reset_value = Random::GetByte() + 1;
-  }
-
+  /*
+   * Generate Samples
+   */
   inline void RenderHMC(
       uint8_t shape,
       uint8_t note,
@@ -191,52 +110,47 @@ class Oscillator {
       uint8_t* buffer4
 	  ) {
 	// Set current osc values
+	// update divisions when osc or setting change
+	if( phase_increment_.integral != increment.integral || 
+		phase_increment_.fractional != increment.fractional || 
+		note_ != note || 
+		increment_change_ )
+	{
+		note_ = note;
+		phase_increment_ = increment;
+		// calculate shift amounts
+		update_shift_amount();
+		update_shift_fine();
+		// redo shifts
+		set_increments();
+		// reset
+		increment_change_ = 0;
+	}
+	// set current shape values
     shape_ = shape;
-    note_ = note;
-    phase_increment_ = increment;
-	set_increments();
     sync_input_ = sync_input;
     sync_output_ = sync_output;
-	render_count_++;
 	// switch on shape value
 	switch(shape)
 	{
 		case WAVEFORM_NONE:
 			RenderSilenceHMC(buffer, buffer2, buffer3, buffer4);
 			return;
-		case WAVEFORM_SQUARE:
 		case WAVEFORM_SAW:
+		case WAVEFORM_SQUARE:
 		case WAVEFORM_TRIANGLE:
-			RenderSimpleWavetableHMC(buffer, buffer2, buffer3, buffer4);
+		case WAVEFORM_SINE:
+			RenderSimpleWavetableHMC(buffer, buffer2, buffer3, buffer4, true);
 			return;
-		case WAVEFORM_WAVETABLE_1:
-		case WAVEFORM_WAVETABLE_2:
-		case WAVEFORM_WAVETABLE_3:
-		case WAVEFORM_WAVETABLE_4:
-		case WAVEFORM_WAVETABLE_5:
-		case WAVEFORM_WAVETABLE_6:
-		case WAVEFORM_WAVETABLE_7:
-		case WAVEFORM_WAVETABLE_8:
-		case WAVEFORM_WAVETABLE_9:
-		case WAVEFORM_WAVETABLE_10:
-		case WAVEFORM_WAVETABLE_11:
-		case WAVEFORM_WAVETABLE_12:
-		case WAVEFORM_WAVETABLE_13:
-		case WAVEFORM_WAVETABLE_14:
-		case WAVEFORM_WAVETABLE_15:
-		case WAVEFORM_WAVETABLE_16:
-		case WAVEFORM_WAVETABLE_17:
-		case WAVEFORM_WAVETABLE_18:
-			RenderInterpolatedWavetableHMC(buffer, buffer2, buffer3, buffer4);
-			return;
-		case WAVEFORM_8BITLAND:
-			Render8BitLandHMC(buffer, buffer2, buffer3, buffer4);
-			return;
-		case WAVEFORM_CRUSHED_SINE:
-			RenderCrushedSineHMC(buffer, buffer2, buffer3, buffer4);
+		case WAVEFORM_SAW2:
+		case WAVEFORM_TRIANGLE2:
+		case WAVEFORM_SQUARE2:
+		case WAVEFORM_SINE2:
+			RenderSimpleWavetableHMC(buffer, buffer2, buffer3, buffer4, false);
 			return;
 		default:
-			RenderSilenceHMC(buffer, buffer2, buffer3, buffer4);
+			RenderInterpolatedWavetableHMC(buffer, buffer2, buffer3, buffer4);
+			return;
 	}
   }
 
@@ -244,17 +158,18 @@ class Oscillator {
     parameter_ = parameter;
   }
   
-  inline void set_secondary_parameter(uint8_t secondary_parameter) {
-    secondary_parameter_ = secondary_parameter;
-  }
-
   /*
   * Sets the division amounts for the Oscillator 'partials'
   */
   inline void set_divisions(uint8_t div_code)
   {
-	  // NO CHECK FOR VALID RANGE!!!!
-	  divisions_ = oDivisions[div_code];
+	  if(divisions_ != oDivisions[div_code])
+	  {
+		  // NO CHECK FOR VALID RANGE!!!!
+		  divisions_ = oDivisions[div_code];
+		  // update division increments
+		  increment_change_ = 1;
+	  }
   }
   
   /*
@@ -262,7 +177,20 @@ class Oscillator {
   */
   inline void set_shift_type(uint8_t shift_type)
   {
-	  shift_type_ = static_cast<ShiftType>(shift_type);
+	  if(shift_type_ != shift_type)
+	  {
+		shift_type_ = shift_type;
+		// update division increments
+		increment_change_ = 1;
+	  }
+  }
+
+  /*
+   * Returns the currently set shift type
+   */
+  inline uint8_t get_shift_type()
+  {
+	  return shift_type_;
   }
     
   /*
@@ -270,35 +198,12 @@ class Oscillator {
   */
   inline void set_shift_amount(int8_t amount)
   {
-	// special case
-	// bigger sweep for fine amount
-	shift_val_amount_ = amount;
-	if(amount == -63)
+	// unchanged - do nothing
+	if(shift_value_ != amount)
 	{
-		shift_amount_ = 0;
-		return;
-	}
-	// negative values
-	if(amount < 0)
-	{
-		// convert to positive value for shift
-		// shift and then convert back to negative value
-		shift_amount_ = ~(((~amount + 1)  * phase_increment_.integral) >> 6) + 1;
-	}
-	// zero
-	else if(amount == 0)
-	{
-		shift_amount_ = 0;
-	}
-	// positive values
-	else
-	{
-
-		// positive shift - semitones...
-		int16_t zeroVal = ResourcesManager::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, twelth_rem[note_ + 4] << 3) >> (10 - twelth_div[note_ + 4]);
-		int8_t key = twelth_rem[note_ + 4 + amount];
-		int8_t octave = twelth_div[note_ + 4 + amount];
-		shift_amount_ = (ResourcesManager::Lookup<uint16_t, uint16_t>(lut_res_oscillator_increments, key << 3) >> (10 - octave)) - zeroVal;
+		shift_value_ = amount;
+		// update division increments
+		increment_change_ = 1;
 	}
   }
 
@@ -307,44 +212,75 @@ class Oscillator {
   */
   inline void set_shift_fine(uint8_t fine)
   {
+	// do nothing if unchanged
+	if(shift_fine_value_ != fine)
+	{
+		shift_fine_value_ = fine;
+		// update division increments
+		increment_change_ = 1;
+	}
+  }
+
+  /*
+  * Updates the amount of frequency shift
+  */
+  inline void update_shift_amount()
+  {
+	// zero
+	if(!shift_value_)
+	{
+		shift_amount_ = 0;
+	}
+	// special case
+	// bigger sweep for fine amount
+	else if(shift_value_ == -64)
+	{
+		shift_amount_ = 0;
+	}
+	// negative values
+	else if(shift_value_ < 0)
+	{
+		// convert to positive value for shift
+		// shift and then convert back to negative value
+		shift_amount_ = ~(((~shift_value_ + 1)  * phase_increment_.integral) >> 6) + 1;
+	}
+	// positive values
+	else
+	{
+		// positive shift - semitones...
+		int16_t zeroVal = ResourcesManager::Lookup<uint16_t, uint16_t>(
+			lut_res_oscillator_increments, twelth_rem[note_]) >> (10 - twelth_div[note_]);
+		shift_amount_ = (ResourcesManager::Lookup<uint16_t, uint16_t>(
+			lut_res_oscillator_increments, twelth_rem[note_ + shift_value_]) >> (10 - twelth_div[note_ + shift_value_])) - zeroVal;
+	}
+  }
+
+  /*
+  * Updates the fine amount of frequency shift
+  */
+  inline void update_shift_fine()
+  {
+	// ZERO
+	if(!shift_fine_value_)
+	{	
+		shift_fine_amount_ = 0;
+	}
 	// special case
 	// Larger sweep from zero shift_amount_
-	if(shift_val_amount_ == -63)
+	else if(shift_value_ == -64)
 	{
-		shift_amount_ += (fine * phase_increment_.integral) >> 5;
-		return;
+		shift_fine_amount_ = (shift_fine_value_ * phase_increment_.integral) >> 5;
 	}
 	// special case
 	// Octave shift at limit
-	if(fine == 127)
+	else if(shift_fine_value_ == 127)
 	{
-		shift_amount_ += phase_increment_.integral << 1;
-		return;
+		shift_fine_amount_ = phase_increment_.integral << 1;
 	}
-	shift_amount_ += (fine * phase_increment_.integral) >> 6;
-  }
-
-  /*
-  * Adds a metallic modulation effect to the oscillator
-  *   alternates the shift of the phase
-  */
-  inline void set_warp(uint8_t warp)
-  {
-	  warp_ = phase_increment_.integral * warp;
-  }
-
-  /*
-   *  Sets the frequency of the warp modulation
-   *  *** extra mostly useless bit ***
-   */
-  inline void set_warp_check(uint8_t warp_check)
-  {
-		if (warp_check)
-		{
-			warp_check_ = 16384 - ((warp_check++) << 7);
-			return;
-		}
-		warp_check_ = 16384;
+	else
+	{
+		shift_fine_amount_ = (shift_fine_value_ * phase_increment_.integral) >> 6;
+	}
   }
 
   /*
@@ -353,6 +289,7 @@ class Oscillator {
    */
   inline void set_increments()
   {
+	// ******* Update when - phase_increment_ / divisions_ / shift_amount_ / shift_fine / shift_type_ change
 	// default for increments is 2
 	phase_increment2_ = phase_increment3_ = U24ShiftLeft(phase_increment_);
 	switch (divisions_ & 56) // ### Div 1
@@ -403,15 +340,17 @@ class Oscillator {
 	}
 	// Add shift amounts to each phase increment
 	uint24_t shift_adjust;
-	shift_adjust.integral = shift_amount_;
-	uint24_t double_shift = U24ShiftLeft(shift_adjust);
-	switch (shift_type_)
+	shift_adjust.integral = shift_amount_ + shift_fine_amount_;
+	if(shift_adjust.integral)
 	{
+		uint24_t double_shift = U24ShiftLeft(shift_adjust);
+		ShiftType shift_type = static_cast<ShiftType>(shift_type_);
+		switch (shift_type)
+		{
 		case F_SHIFT:
 		case F_SHIFT_SYNC_R: // Freq Shift adds one shift to each
 			phase_increment2_ = U24Add(phase_increment2_, shift_adjust);	
 			phase_increment3_ = U24Add(phase_increment3_, shift_adjust);
-			//phase_increment4_ = U24Add(phase_increment4_, shift_adjust);
 			break;
 		case P_SHIFT: 
 		case P_SHIFT_SYNC_R:	// Pitch Shift adds equal shift amount to each increment
@@ -433,7 +372,7 @@ class Oscillator {
 					phase_increment2_ = U24Add(phase_increment2_, U24Add(U24ShiftLeft(double_shift), double_shift));
 					break;
 				case 56:	// 7 (8 - 1)
-					phase_increment2_ = U24Sub(U24ShiftLeft(U24ShiftLeft(double_shift)), shift_adjust);
+					phase_increment2_ = U24Add(phase_increment2_, U24Sub(U24ShiftLeft(U24ShiftLeft(double_shift)), shift_adjust));
 					break;
 				default:	// 2
 					phase_increment2_ = U24Add(phase_increment2_, double_shift);
@@ -466,7 +405,7 @@ class Oscillator {
 			break;
 		case F_EVEN:
 		case F_EVEN_SYNC_R: // Add 1 less shift amount than Pitch Shift
-			switch (divisions_ & 192) // ### Div 1
+			switch (divisions_ & 56) // ### Div 1
 			{
 				case 8:	// 1 - Always add one!
 					phase_increment2_ = U24Add(phase_increment2_, shift_adjust);
@@ -490,7 +429,7 @@ class Oscillator {
 					phase_increment2_ = U24Add(phase_increment2_, shift_adjust);
 					break;
 			}
-			switch(divisions_ & 7) // ### Div 
+			switch(divisions_ & 7) // ### Div 2
 			{
 				case 3:	// 3 - 2
 					phase_increment3_ = U24Add(phase_increment3_, double_shift);
@@ -515,11 +454,10 @@ class Oscillator {
 					break;
 			}
 			break;
+		}
 	}
   }
-  
-  //static const uint16_t CHOPPER_MAX = 65535;
- 
+   
 private:
   // Current phase of the oscillator.
   uint24_t phase_;
@@ -527,18 +465,18 @@ private:
   uint24_t phase3_;
   //uint24_t phase4_;
 
-  uint16_t render_count_;
-  uint16_t chopper_;
-  uint16_t chopper_check_;
   uint16_t warp_;
   static uint16_t warp_check_;
 
-  // divisions
+  // divisions code index
   uint8_t divisions_;
   // shift fields
-  ShiftType shift_type_;
+  uint8_t shift_type_;
   int16_t shift_amount_;
-  int8_t shift_val_amount_;
+  int16_t shift_fine_amount_;
+  int8_t shift_value_;
+  int8_t shift_fine_value_;
+  uint8_t increment_change_;
 
   // Phase increment (and phase increment x 2, for low-sr oscillators).
   uint24_t phase_increment_;
@@ -552,38 +490,16 @@ private:
 
   // Current value of the oscillator parameter.
   uint8_t parameter_;
-  uint8_t secondary_parameter_;
   uint8_t note_;
 
-  // Union of state data used by each algorithm.
-  OscillatorState data_;
-  
   // A flag set to true when sync is enabled ; and a table to record the
   // position of phrase wraps
   uint8_t* sync_input_;
   uint8_t* sync_output_;
   
-  
-  // Since this is the most computationally expensive function, we still
-  // duplicated it into a "master" and a "slave" version for OSC1 and OSC2,
-  // with the corresponding oscillators sync code stripped away.
-  //void RenderBandlimitedPwmHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  
   void RenderSilenceHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  void RenderSimpleWavetableHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
+  void RenderSimpleWavetableHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4, bool pulse_width);
   void RenderInterpolatedWavetableHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  void RenderDirtyPwmHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  void Render8BitLandHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  void RenderCrushedSineHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  //void RenderCzSawHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  //void RenderCzPulseResoHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  //void RenderCzResoHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-  //void RenderFmHMC(uint8_t* buffer, uint8_t* buffer2, uint8_t* buffer3, uint8_t* buffer4);
-
-  //void RenderSweepingWavetableRam(uint8_t* buffer);
-  //void RenderVowel(uint8_t* buffer);
-  //void RenderQuadSawPad(uint8_t* buffer);
-  //void RenderFilteredNoise(uint8_t* buffer);
 
   DISALLOW_COPY_AND_ASSIGN(Oscillator);
 };
